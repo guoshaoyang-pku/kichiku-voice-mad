@@ -1,0 +1,13 @@
+{
+ "mfcc_dtw_cosine_distance_per_step": 0.0382,
+ "mfcc_aligned_cosine": 0.9618,
+ "chroma_dtw_cosine_distance_per_step": 0.0756,
+ "chroma_aligned_cosine": 0.9013,
+ "frames_ref": 5255,
+ "frames_render": 5255,
+ "base": "v1_roundabout_anime",
+ "duration_seconds": 120.0,
+ "reference_original_vs_render_mfcc_cosine": null,
+ "original_sequence_mfcc_aligned_cosine": 0.9502,
+ "original_sequence_chroma_aligned_cosine": 0.7932
+}

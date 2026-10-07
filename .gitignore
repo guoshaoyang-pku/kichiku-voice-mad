@@ -1,0 +1,20 @@
+# Audio materials and rendered audio are NOT distributed (copyright).
+# Rebuild locally per README.
+materials/
+*.wav
+*.mp3
+*.ogg
+*.flac
+*.srt
+
+# Caches (regenerable)
+prototype/materials/contour_cache/
+prototype/lib/samples/
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+
+# Local env
+.venv/
+.env

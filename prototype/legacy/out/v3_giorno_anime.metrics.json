@@ -1,0 +1,13 @@
+{
+ "song": "il_vento_doro.mid",
+ "version": "v3",
+ "palette": "anime",
+ "shift_mode": "pv",
+ "n_notes": 770,
+ "pitch_acc_50c": 0.179,
+ "pitch_acc_100c": 0.322,
+ "median_abs_cents": 248.8,
+ "voiced_frame_ratio": 0.451,
+ "onset_coverage": 1.0,
+ "dyn_corr": 0.619
+}

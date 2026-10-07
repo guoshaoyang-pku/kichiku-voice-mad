@@ -1,0 +1,13 @@
+{
+ "song": "il_vento_doro.mid",
+ "version": "v2",
+ "palette": "genshin",
+ "shift_mode": "pv",
+ "n_notes": 770,
+ "pitch_acc_50c": 0.175,
+ "pitch_acc_100c": 0.278,
+ "median_abs_cents": 222.8,
+ "voiced_frame_ratio": 0.538,
+ "onset_coverage": 1.0,
+ "dyn_corr": 0.798
+}

@@ -1,0 +1,23 @@
+{
+ "version": "v3",
+ "target": "original recording melody (Melodia) + layered sampler",
+ "orig_window": [
+  148.0,
+  208.0
+ ],
+ "transpose": 0.0,
+ "n_notes": 134,
+ "n_phrases": 18,
+ "n_memes": 4,
+ "note_dur_median": 0.25,
+ "melody_coverage_of_target": 0.837,
+ "melody_median_abs_cents": 23.5,
+ "melody_acc_50c": 0.759,
+ "melody_acc_100c": 0.897,
+ "render_duty_cycle": 0.813,
+ "pitch_shift_semi_median_abs": 0.12,
+ "pitch_shift_semi_p90_abs": 0.33,
+ "time_stretch": "none for nuclei<=note (crop); ping-pong sustain loop for longer notes; memes untouched",
+ "backing_gain_db": -10.0,
+ "meme_gain_db": -1.0
+}

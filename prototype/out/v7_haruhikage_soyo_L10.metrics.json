@@ -1,0 +1,27 @@
+{
+ "version": "v7",
+ "song": "haruhikage_original",
+ "singer": "长崎爽世",
+ "lambda_N": 10.0,
+ "w_vowel": 0.0,
+ "rho": 0.7,
+ "window": [
+  0.0,
+  259.0
+ ],
+ "n_tokens": 293,
+ "token_dur_median": 0.57,
+ "distinct_lines": 93,
+ "crop_mean": 0.086,
+ "gain_db_median_abs": 1.9,
+ "processing": "none (constant gain + 5 ms fades)",
+ "M1_pitch_acc50": 0.571,
+ "M1_pitch_acc100": 0.818,
+ "M1_pitch_cents_median": 40.3,
+ "M2_voicing_recall": 0.786,
+ "M2_voicing_false_alarm": 0.145,
+ "M3_onset_f1_50ms": 0.354,
+ "M5_dynamics_corr": 0.433,
+ "inst_db": -6.0,
+ "ref_name": "v7_haruhikage"
+}

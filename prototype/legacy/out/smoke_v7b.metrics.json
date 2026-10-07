@@ -1,0 +1,30 @@
+{
+ "song": "roundabout.mid",
+ "version": "v7",
+ "palette": "anime",
+ "shift_mode": "world",
+ "n_notes": 93,
+ "pitch_acc_50c": 0.964,
+ "pitch_acc_100c": 0.983,
+ "median_abs_cents": 10.1,
+ "voiced_frame_ratio": 0.659,
+ "onset_coverage": 0.935,
+ "dyn_corr": 0.203,
+ "macro_dyn_corr": 0.764,
+ "n_chunks": 14,
+ "notes_per_clip": 6.64,
+ "clip_played_full": 1.0,
+ "stretch_median": 1.185,
+ "stretch_within_0.7_1.4": 0.643,
+ "syllable_note_match": 0.929,
+ "hires_fraction": 1.0,
+ "characters": [
+  "八幡海铃",
+  "千早爱音",
+  "祐天寺喵梦",
+  "要乐奈",
+  "长崎爽世"
+ ],
+ "pad_layers": 2,
+ "sample_rate": 32000
+}

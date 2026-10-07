@@ -1,0 +1,30 @@
+{
+ "version": "v1",
+ "song": "roundabout.mid",
+ "palette": "anime",
+ "start": 58.0,
+ "dur_limit": 120.0,
+ "n_vocal_clips": 28,
+ "vocal_clip_dur_median": 2.845,
+ "vocal_clips_per_second": 0.233,
+ "notes_covered": 174,
+ "shift_abs_median_semi": 0.402,
+ "shift_abs_max_semi": 2.007,
+ "backing_notes": 36,
+ "backing_tracks": [
+  "Bass",
+  "Guitar 1",
+  "Guitar 3"
+ ],
+ "backing_gain_db": -10.0,
+ "pitch_strength": 1.0,
+ "backing_vs_vocal_active_db": -11.01,
+ "sample_rate": 32000,
+ "reference_clips": 28,
+ "reference_dir": "v1_roundabout_anime_refs",
+ "device": "mps",
+ "candidate_pool": 220,
+ "melody_median_abs_cents": 5.7,
+ "melody_acc_50c": 0.718,
+ "melody_acc_100c": 0.756
+}

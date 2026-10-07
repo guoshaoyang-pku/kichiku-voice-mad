@@ -1,0 +1,52 @@
+[
+{
+"t0": 3.079,
+"t1": 6.861,
+"char": "要乐奈",
+"work": "anime:mygo",
+"text": "",
+"clip": "BV1zjbK6oESw_p2__纯享猫叫_一次听够_MyGO_Mujica要乐奈语音全集_p02_P2_0075_0.wav",
+"notes": 6,
+"stretch": 0.981,
+"syl": 6,
+"hires": true,
+"dur_out": 3.783,
+"align": 0.0,
+"warp_dist": 0.028,
+"f0_mode": "source",
+"pitches": [
+59,
+61,
+59,
+66,
+64,
+64
+]
+},
+{
+"t0": 6.767,
+"t1": 10.3,
+"char": "祐天寺喵梦",
+"work": "anime:ave_mujica",
+"text": "",
+"clip": "BV1iWryY8EAh_喵梦纯人声无伴奏合集__包含喵梦节目_截至喵梦有话说02集_0236_0.wav",
+"notes": 8,
+"stretch": 1.056,
+"syl": 8,
+"hires": true,
+"dur_out": 3.533,
+"align": 0.2,
+"warp_dist": 0.153,
+"f0_mode": "source",
+"pitches": [
+59,
+61,
+59,
+66,
+67,
+66,
+67,
+66
+]
+}
+]

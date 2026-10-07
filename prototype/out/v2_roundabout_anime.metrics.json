@@ -1,0 +1,21 @@
+{
+ "version": "v2",
+ "target": "original recording (vocal stem contour)",
+ "vocal_stem": "vocals.wav",
+ "orig_window": [
+  148.0,
+  248.0
+ ],
+ "n_phrases": 32,
+ "n_vocal_clips": 32,
+ "phrase_dur_median": 1.9,
+ "target_voiced_ratio": 0.786,
+ "render_duty_cycle": 0.586,
+ "melody_median_abs_cents_vs_orig": 15.0,
+ "melody_acc_50c_vs_orig": 0.712,
+ "melody_acc_100c_vs_orig": 0.761,
+ "backing": "synth follows original bass stem",
+ "backing_gain_db": -10.0,
+ "pitch_strength": 1.0,
+ "stretch_log2_median": 0.053
+}

@@ -1,0 +1,30 @@
+{
+ "version": "v5",
+ "song": "haruhikage_original",
+ "singers": [
+  "长崎爽世"
+ ],
+ "window": [
+  0.0,
+  259.0
+ ],
+ "key": "B major",
+ "n_syllables": 615,
+ "syllable_dur_median": 0.19,
+ "jianpu_bars9_16_match": 0.711,
+ "M1_melody_acc50_vs_main_notes": 0.95,
+ "M1_melody_cents_median_vs_main_notes": 9.2,
+ "M1_melody_acc50_vs_raw_vocal": 0.801,
+ "M2_voicing_recall": 0.873,
+ "M2_voicing_false_alarm": 0.161,
+ "M3_onset_f1_50ms": 0.394,
+ "M4_note_stability_cents_median": 8.8,
+ "M5_dynamics_corr": 0.417,
+ "M6_shift_semi_median_abs": 0.36,
+ "M6_shift_gt4_ratio": 0.0,
+ "M6_stretch_median": 1.25,
+ "M7_contiguous_join_ratio": 0.397,
+ "M7_distinct_lines": 179,
+ "M7_distinct_units": 299,
+ "inst_db": -6.0
+}

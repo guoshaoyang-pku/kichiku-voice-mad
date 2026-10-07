@@ -1,0 +1,79 @@
+[
+ {
+  "N": 375,
+  "dur_median": 0.54,
+  "pitch_acc50": 0.602,
+  "pitch_acc100": 0.853,
+  "voicing_recall": 0.722,
+  "false_alarm": 0.087,
+  "lambda_N": 0.0,
+  "distinct_lines": 115,
+  "crop_mean": 0.064
+ },
+ {
+  "N": 345,
+  "dur_median": 0.54,
+  "pitch_acc50": 0.595,
+  "pitch_acc100": 0.849,
+  "voicing_recall": 0.726,
+  "false_alarm": 0.087,
+  "lambda_N": 3.0,
+  "distinct_lines": 107,
+  "crop_mean": 0.069
+ },
+ {
+  "N": 325,
+  "dur_median": 0.56,
+  "pitch_acc50": 0.592,
+  "pitch_acc100": 0.847,
+  "voicing_recall": 0.723,
+  "false_alarm": 0.086,
+  "lambda_N": 6.0,
+  "distinct_lines": 101,
+  "crop_mean": 0.075
+ },
+ {
+  "N": 293,
+  "dur_median": 0.57,
+  "pitch_acc50": 0.593,
+  "pitch_acc100": 0.841,
+  "voicing_recall": 0.715,
+  "false_alarm": 0.093,
+  "lambda_N": 10.0,
+  "distinct_lines": 93,
+  "crop_mean": 0.086
+ },
+ {
+  "N": 263,
+  "dur_median": 0.65,
+  "pitch_acc50": 0.586,
+  "pitch_acc100": 0.835,
+  "voicing_recall": 0.703,
+  "false_alarm": 0.094,
+  "lambda_N": 15.0,
+  "distinct_lines": 90,
+  "crop_mean": 0.097
+ },
+ {
+  "N": 234,
+  "dur_median": 0.76,
+  "pitch_acc50": 0.567,
+  "pitch_acc100": 0.821,
+  "voicing_recall": 0.69,
+  "false_alarm": 0.091,
+  "lambda_N": 20.0,
+  "distinct_lines": 86,
+  "crop_mean": 0.1
+ },
+ {
+  "N": 180,
+  "dur_median": 0.83,
+  "pitch_acc50": 0.54,
+  "pitch_acc100": 0.789,
+  "voicing_recall": 0.641,
+  "false_alarm": 0.082,
+  "lambda_N": 30.0,
+  "distinct_lines": 77,
+  "crop_mean": 0.091
+ }
+]

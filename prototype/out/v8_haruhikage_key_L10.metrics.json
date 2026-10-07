@@ -1,0 +1,58 @@
+{
+ "version": "v8",
+ "song": "haruhikage_original",
+ "singer": "长崎爽世",
+ "lambda_N": 10.0,
+ "w_vowel": 0.0,
+ "w_onset": 2.0,
+ "shifts": "0",
+ "low_chars": "",
+ "variant": "keyframe",
+ "n_shifted": 0,
+ "n_choked": 208,
+ "keyframe_hard": true,
+ "choke": true,
+ "n_other_char": 0,
+ "rho": 0.7,
+ "window": [
+  0.0,
+  259.0
+ ],
+ "n_tokens": 311,
+ "token_dur_median": 0.51,
+ "distinct_lines": 113,
+ "crop_mean": 0.141,
+ "gain_db_median_abs": 1.7,
+ "processing": "none (constant gain + 5 ms fades)",
+ "M3_onsets_hit_150ms": 0.732,
+ "M3_onset_lag_median_ms": 0.0,
+ "M3_onset_within_30ms": 0.463,
+ "M3_onset_late_gt30ms": 0.196,
+ "M3_onset_early_gt30ms": 0.172,
+ "pitch_bands": {
+  "band_0_61": {
+   "share": 0.181,
+   "covered": 0.717,
+   "acc50": 0.504
+  },
+  "band_61_68": {
+   "share": 0.511,
+   "covered": 0.812,
+   "acc50": 0.586
+  },
+  "band_68_99": {
+   "share": 0.308,
+   "covered": 0.781,
+   "acc50": 0.618
+  }
+ },
+ "M1_pitch_acc50": 0.582,
+ "M1_pitch_acc100": 0.825,
+ "M1_pitch_cents_median": 40.3,
+ "M2_voicing_recall": 0.785,
+ "M2_voicing_false_alarm": 0.126,
+ "M3_onset_f1_50ms": 0.555,
+ "M5_dynamics_corr": 0.41,
+ "inst_db": -6.0,
+ "ref_name": "v7_haruhikage"
+}

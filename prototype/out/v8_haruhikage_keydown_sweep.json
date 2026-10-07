@@ -1,0 +1,38 @@
+[
+ {
+  "N": 381,
+  "dur_median": 0.4,
+  "pitch_acc50": 0.628,
+  "pitch_acc100": 0.869,
+  "voicing_recall": 0.787,
+  "false_alarm": 0.096,
+  "keyframe_hit_30ms": 0.379,
+  "lambda_N": 0.0,
+  "distinct_lines": 155,
+  "crop_mean": 0.152
+ },
+ {
+  "N": 293,
+  "dur_median": 0.55,
+  "pitch_acc50": 0.624,
+  "pitch_acc100": 0.859,
+  "voicing_recall": 0.76,
+  "false_alarm": 0.091,
+  "keyframe_hit_30ms": 0.32,
+  "lambda_N": 10.0,
+  "distinct_lines": 107,
+  "crop_mean": 0.147
+ },
+ {
+  "N": 166,
+  "dur_median": 0.83,
+  "pitch_acc50": 0.589,
+  "pitch_acc100": 0.818,
+  "voicing_recall": 0.645,
+  "false_alarm": 0.073,
+  "keyframe_hit_30ms": 0.215,
+  "lambda_N": 30.0,
+  "distinct_lines": 64,
+  "crop_mean": 0.136
+ }
+]

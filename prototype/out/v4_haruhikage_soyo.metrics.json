@@ -1,0 +1,24 @@
+{
+ "version": "v4",
+ "song": "haruhikage_original",
+ "singer": "长崎爽世",
+ "codebook_size": 16,
+ "window": [
+  0.0,
+  259.0
+ ],
+ "key": "B major",
+ "tuning_cents": 4.2,
+ "n_notes": 562,
+ "n_phrases": 29,
+ "note_dur_median": 0.27,
+ "legato_ratio": 0.915,
+ "codewords_used": 16,
+ "shift_semi_median_abs": 0.25,
+ "stretch_median": 0.82,
+ "render_voiced_in_notes": 0.946,
+ "render_cents_median": 8.4,
+ "render_acc_50c": 0.964,
+ "transcription_vs_orig_cents_median": 15.5,
+ "transcription_vs_orig_acc_50c": 0.833
+}
