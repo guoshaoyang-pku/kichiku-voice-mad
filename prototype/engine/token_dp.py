@@ -565,7 +565,7 @@ def main():
     ap.add_argument("--choke", action="store_true", help="a token may be cut by the next one at a key frame")
     ap.add_argument("--choke-keep", type=float, default=0.4)
     ap.add_argument("--key-tol", type=int, default=1, help="frames (10 ms) of tolerance for the hard key-frame rule")
-    ap.add_argument("--shifts", default="0", help="allowed integer varispeed shifts, e.g. -4,-3,-2,0")
+    ap.add_argument("--shifts", default="0", help="allowed varispeed shifts in semitones (floats ok), e.g. -4,-3,-2,-1.73,0")
     ap.add_argument("--w-shift", type=float, default=0.4)
     ap.add_argument("--low-chars", default="", help="extra characters, used only for unshifted low lines")
     ap.add_argument("--low-cap", type=float, default=63.0)
@@ -630,7 +630,7 @@ def main():
         TL = up2(codes["target"], n_all)[i0:i1].astype(np.int64)
         dtab = codes["dtab"]
     toks = build_tokens(clips, contours, args.rho, args.max_len, codes=codes, attacks=trains, peaks=peaks,
-                        primary=args.singer, shifts=[int(x) for x in args.shifts.split(",")],
+                        primary=args.singer, shifts=[float(x) for x in args.shifts.split(",")],
                         low_cap=args.low_cap, char_cost=args.char_cost, w_shift=args.w_shift,
                         low_chars_cap=args.low_cap)
     # target key frames: energy onsets of the original vocal + note changes

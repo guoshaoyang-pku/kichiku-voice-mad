@@ -2,7 +2,7 @@
 
 Render a song's vocal melody with an anime character's spoken lines — no vocoder, no pitch correction of the voice clips. 用动漫角色的台词原声当"码本"，靠搜索把旋律"选"出来，而不是"修"出来。
 
-**Current engine (v8)**: keyframe-constrained segment Viterbi DP — unit selection over raw clips ("unit-selection VQ"). 当前目标曲《春日影》(MyGO!!!!!)，码本为长崎素世台词（低音区借椎名立希/八幡海铃/若叶睦）。
+**Current engine (v8/v9)**: keyframe-constrained segment Viterbi DP — unit selection over raw clips ("unit-selection VQ"); v9 adds `auto_mad.py` 全自动管线（下载分离 → 码本变体 × λ_N 自动调参 → 渲染），配歌曲只需一条命令。当前目标曲《春日影》(MyGO!!!!!)、《ジョジョ~その血の運命~》、《Roundabout》，码本为长崎素世台词（低音区借椎名立希/八幡海铃/若叶睦）。
 
 ## How it works (v7/v8 formulation)
 
@@ -38,12 +38,12 @@ materials/                     # 【不在仓库】原始素材 134GB，见下�
 
 ```bash
 ./setup.sh                    # venv + 依赖（macOS Apple Silicon 验证，MPS 加速）
-# 1. 按下方「素材库」章节准备 materials/（台词 + 目标曲）
-# 2. 分离目标曲人声：
-demucs -n htdemucs_ft prototype/materials/<song>.wav
-# 3. 渲染（参数见 --help）：
+# 全自动管线（v9）：下载/分离 + 码本变体 × λ_N 自动调参 + 渲染，一条命令
+python3 prototype/engine/auto_mad.py prepare --name mysong --src "ジョジョ その血の運命 OP"
+python3 prototype/engine/auto_mad.py tune --name mysong        # → out/v9_* + 调参报告
+# 手动单渲染（引擎全参数）：
 python3 prototype/engine/token_dp.py --song prototype/materials/<song>.wav ...
-# 4. 生成验收页：
+# 生成验收页：
 python3 prototype/make_review.py   # → prototype/review.html
 ```
 

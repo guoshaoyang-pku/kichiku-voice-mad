@@ -46,6 +46,45 @@ audio{width:100%;height:34px}.note{color:#555;font-size:.9rem}code{background:#f
 </style></head><body>"""
 
 
+def v9_section():
+    rows = [(mf.name[:-len(".metrics.json")], json.load(open(mf))) for mf in sorted(OUT.glob("v9_*.metrics.json"))]
+    if not rows:
+        return ""
+    names = {"raw": "素世原调", "down": "素世 + 变慢降调", "down+low": "素世降调 + 低音借他人",
+             "down+low+scale": "素世降调 + 低音借他人 + 长度缩放"}
+    h = ["""<h2>v9 · 全自动化管线（auto_mad）：码本变体 × λ_N 自动调参</h2>
+<p class="note">引擎与 v8 相同（关键帧卡点 + 掐断 + 有限降调），但配置不再手挑：对每首歌自动跑结构变体（原调 / 降调 / 降调+低音借他人，可选 +长度缩放）× λ_N 扫描，用"听起来对劲"清单标量化打分（音高 ±50 为主 + 有声召回/误报 + 起音卡点，门槛：召回 ≥70%、误报 ≤15%），胜者自动渲染。全程无需人工试参。</p>"""]
+    for tf in sorted(OUT.glob("v9_*_tune.json")):
+        rep = json.load(open(tf))
+        h.append(f"<details><summary>{rep['song']} 自动调参过程（{len(rep['table'])} 个配置）</summary>"
+                 f"<table><tr><th>变体</th><th>λ_N</th><th>score</th><th>token 数</th><th>±50音分</th><th>±100</th><th>该唱在唱</th><th>误报</th><th>卡点±30ms</th><th>台词数</th></tr>")
+        for t in sorted(rep["table"], key=lambda t: -t["score"]):
+            win = " <b>← 选中</b>" if (t["variant"] == rep["winner"]["variant"] and t["lambda_N"] == rep["winner"]["lambda_N"]) else ""
+            gate = "（过门槛）" if t["gated"] else ""
+            h.append(f"<tr><td>{names.get(t['variant'], t['variant'])}</td><td>{t['lambda_N']:g}</td><td>{t['score']}{win}{gate}</td>"
+                     f"<td>{t['N']}</td><td>{round(t['pitch_acc50']*100)}%</td><td>{round(t['pitch_acc100']*100)}%</td>"
+                     f"<td>{round(t['voicing_recall']*100)}%</td><td>{round(t['false_alarm']*100)}%</td>"
+                     f"<td>{round(t['keyframe_hit_30ms']*100)}%</td><td>{t['distinct_lines']}</td></tr>")
+        h.append("</table></details>")
+    by_song = {}
+    for name, m in rows:
+        by_song.setdefault(m.get("song", "?"), []).append((name, m))
+    for song, srows in by_song.items():
+        ref = srows[0][1].get("ref_name", "")
+        h.append(f"<h3>{song}</h3><p>原曲 {audio(ref + '_orig_mix.mp3')} 原曲人声 {audio(ref + '_orig_vocal.mp3')} 器乐 {audio(ref + '_instrumental.mp3')}</p>")
+        h.append("<table><tr><th>渲染</th><th>实测指标</th><th>试听</th></tr>")
+        for name, m in srows:
+            b = m.get("pitch_bands", {}).get("band_0_61", {})
+            mt = (f"λ_N={m['lambda_N']:g}，{m['n_tokens']} 个音效（掐断 {m.get('n_choked', 0)}，降调 {m.get('n_shifted', 0)}，他人 {m.get('n_other_char', 0)}）<br>"
+                  f"起音在 ±30 ms 内 {round(m['M3_onset_within_30ms']*100)}%，晚于 30 ms {round(m['M3_onset_late_gt30ms']*100)}%<br>"
+                  f"音高 ±50 音分 {round(m['M1_pitch_acc50']*100)}%，±100 {round(m['M1_pitch_acc100']*100)}%，该唱在唱 {round(m['M2_voicing_recall']*100)}%<br>"
+                  f"低音区（MIDI&lt;61，占 {round(b.get('share', 0)*100)}%）覆盖 {round(b.get('covered', 0)*100)}%，准 {round(b.get('acc50', 0)*100)}%")
+            png = f"diagnostics/{name}_placement.png"
+            h.append(f"<tr><td><code>{name}</code><br>{names.get(m.get('variant'), m.get('variant'))}</td><td>{mt}</td><td><b>人声干声</b><br>{audio(name + '_vocal_dry.mp3')}<br><b>混音</b><br>{audio(name + '.mp3')}<br><a href=\"out/{name}_fragments/index.html\">逐音效碎片</a><br>{image(png) if (OUT / png).exists() else ''}</td></tr>")
+        h.append("</table>")
+    return "\n".join(h)
+
+
 def v8_section():
     rows = [(mf.name[:-len(".metrics.json")], json.load(open(mf))) for mf in sorted(OUT.glob("v8_*.metrics.json"))]
     if not rows:
@@ -225,7 +264,7 @@ def v1_section():
 
 
 def main():
-    h = [HEAD, "<h1>鬼畜调音 · 验收</h1>", v8_section(), v7_section(), v5_section(), v4_section(), v3_section(), v2_section(), v1_section(),
+    h = [HEAD, "<h1>鬼畜调音 · 验收</h1>", v9_section(), v8_section(), v7_section(), v5_section(), v4_section(), v3_section(), v2_section(), v1_section(),
          '<p class="note">旧结果：<code>legacy/out/</code>；旧引擎：<code>legacy/engine/</code>。</p></body></html>']
     (ROOT / "review.html").write_text("\n".join(x for x in h if x))
     n2 = len(list(OUT.glob("v2_*.metrics.json"))) + len(list(OUT.glob("v3_*.metrics.json")))

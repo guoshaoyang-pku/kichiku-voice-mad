@@ -11,8 +11,11 @@ rendered with 长崎素世 (Soyo) lines.
 
 ## Repo layout
 
-- `prototype/engine/token_dp.py` — current engine (v8): keyframe-constrained
-  segment Viterbi DP over raw clips. Start here.
+- `prototype/engine/auto_mad.py` — v9 automated pipeline: prepare (download +
+  demucs) / tune (codebook-variant × λ_N sweep, scalarized metrics gates) /
+  render. Entry point for adding a new song.
+- `prototype/engine/token_dp.py` — core engine (v8): keyframe-constrained
+  segment Viterbi DP over raw clips. Start here for algorithm changes.
 - `prototype/engine/` — older v3–v7 engines (audio_match, mosaic, unit_select,
   sing_melody, sampler_match, phrase_match, nucleus_bank, diagnose_*).
 - `prototype/lib/` — library building (build_library.py), clip index JSONs,
