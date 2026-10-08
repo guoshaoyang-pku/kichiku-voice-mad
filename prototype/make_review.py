@@ -73,8 +73,8 @@ def v10_section():
         joints[p.name.split("_joint_")[0]] = (p.name[:-len(".metrics.json")], json.load(open(p)))
     if not seps and not joints:
         return ""
-    h = ["""<h2>v10 · 带伴奏拟合：A 连带拟合（单流·间隙贝斯）vs B 分别拟合（主旋律+贝斯双流合成）</h2>
-<p class="note">A（joint）：一条 token 流唱主旋律，人声长间隙（≥0.4s）自动接鬼畜贝斯（贝斯轨 +2 八度哼唱），像一个人把整首哼完；B（sep）：v9 主旋律渲染 + 贝斯声部独立 DP 渲染，两流叠加成复音。两版都用原曲 drums+other 打底（-6 dB），鬼畜贝斯取代原贝斯。</p>"""]
+    h = ["""<h2>v10 · 带伴奏拟合：A 连带拟合（单流·间隙贝斯·完整播放）★用户拍板优先版本</h2>
+<p class="note">A（joint）：一条 token 流唱主旋律，人声长间隙自动接鬼畜贝斯（贝斯轨 +2 八度哼唱），像一个人把整首哼完。<b>完整播放（play-full）</b>：拟合阶段允许裁剪/掐断参与搜索，播放时每个音效从原句开头放完整、零裁剪零掐断，句与句自然叠加——彻底消灭 0.1s 碎 glitch。B（sep，旧）：v9 主旋律 + 贝斯独立 DP 双流合成，已降为备选不再出新。两版都用原曲 drums+other 打底（-6 dB），鬼畜贝斯取代原贝斯。</p>"""]
     songs = sorted({k[len("v10_"):-len("_sep")] for k in seps} | {k[len("v10_"):] for k in joints})
     for song in songs:
         ref = f"v9_{song}"
@@ -83,7 +83,7 @@ def v10_section():
         jkey = f"v10_{song}"
         if jkey in joints:
             jname, jm = joints[jkey]
-            mt = (f"{jm['n_tokens']} 个音效（掐断 {jm.get('n_choked', 0)}，降调 {jm.get('n_shifted', 0)}）<br>"
+            mt = (f"{jm['n_tokens']} 个音效（{'完整播放·零掐断' if jm.get('play_full') else '掐断 ' + str(jm.get('n_choked', 0))}，降调 {jm.get('n_shifted', 0)}）<br>"
                   f"±50 音分 {round(jm['M1_pitch_acc50']*100)}%，±100 {round(jm['M1_pitch_acc100']*100)}%，该唱在唱 {round(jm['M2_voicing_recall']*100)}%<br>"
                   f"起音 ±30 ms {round(jm['M3_onset_within_30ms']*100)}%（含贝斯段）")
             frag = f"out/{jname}_fragments/index.html"

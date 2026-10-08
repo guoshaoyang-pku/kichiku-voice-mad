@@ -205,6 +205,7 @@ def build_tokens(clips, contours, rho, max_len, pad=0.06, codes=None, attacks=No
                 if (b - a) * DT > max_len or v[a:b].mean() < 0.2:
                     continue
                 base = {"path": c["path"], "char": c["char"], "text": c.get("text", ""), "a": a, "b": b,
+                        "la": lo, "lb": hi,
                         "crop": 1 - (b - a) / sound_len, "line_len": round(sound_len * DT, 3)}
                 med = float(np.median(st[a:b][v[a:b]]))
                 for sh in shifts:
@@ -444,6 +445,32 @@ def render(seq, toks, args, stems, span, rdb, TV, sm, out, i0, i1, y16, tag_note
     for k, (s0, u, g, e) in enumerate(seq):
         t = toks[u]
         y = SM.clip_audio(t["path"])
+        choked = (e - s0) < len(t["st"])
+        if getattr(args, "play_full", False):
+            # 完整播放：拟合照常（choke/crop 参与搜索），播放时放完整原句，拒绝一切裁剪。
+            # token 帧 0 = 素材帧 a；变速比 r 下，句首 [la,a) 提前 (a-la)*DT/r 秒播出。
+            r = 2 ** (t.get("shift", 0) / 12.0)
+            seg = y[int(t["la"] * DT * FS):int(t["lb"] * DT * FS)].astype(np.float32).copy()
+            if t.get("shift", 0):
+                seg = SM._varispeed(seg, t["shift"]).astype(np.float32)
+            head = (t["a"] - t["la"]) * DT / r
+            f0, per, rms = MO_CONT[t["path"]]
+            ref = np.percentile(rms[(per > 0.55) & (f0 > 70)], 90) if ((per > 0.55) & (f0 > 70)).any() else rms.max()
+            seg *= 0.1 / (ref * np.sqrt(2) + 1e-9) * 10 ** (g / 20)
+            fi = min(int(0.005 * FS), len(seg) // 4)
+            seg[:fi] *= np.linspace(0, 1, fi)
+            seg[-fi:] *= np.linspace(1, 0, fi)
+            place_at = s0 * DT - head
+            if place_at < 0:
+                seg = seg[int(-place_at * FS):]
+                place_at = 0.0
+            SM.place(voc, seg, place_at)
+            cues.append({"k": k, "t0": round(place_at, 3), "t1": round(place_at + len(seg) / FS, 3),
+                         "gain_db": round(g, 1), "char": t.get("char", ""), "shift": t.get("shift", 0),
+                         "choked": False, "play_full": True, "crop": 0, "fit_t1": round(e * DT, 3),
+                         "line_len": t["line_len"], "text": t["text"], "path": t["path"],
+                         "src_t0": round(t["la"] * DT, 3), "src_t1": round(t["lb"] * DT, 3)})
+            continue
         seg = y[int(t["a"] * DT * FS):int(t["b"] * DT * FS)].astype(np.float32).copy()
         if t.get("shift", 0):
             seg = SM._varispeed(seg, t["shift"]).astype(np.float32)
@@ -591,6 +618,8 @@ def main():
                     help="penalize distance from target key frames to nearest internal attack of token")
     ap.add_argument("--keyframe-hard", action="store_true", help="first strong attack of every token on a key frame")
     ap.add_argument("--choke", action="store_true", help="a token may be cut by the next one at a key frame")
+    ap.add_argument("--play-full", action="store_true",
+                    help="拟合照常，播放时放完整原句（拒绝裁剪/掐断，允许自然叠加）")
     ap.add_argument("--choke-keep", type=float, default=0.4)
     ap.add_argument("--key-tol", type=int, default=1, help="frames (10 ms) of tolerance for the hard key-frame rule")
     ap.add_argument("--shifts", default="0", help="allowed varispeed shifts in semitones (floats ok), e.g. -4,-3,-2,-1.73,0")
@@ -813,7 +842,7 @@ def main():
                    "w_pitch": args.w_pitch, "c_skip": args.c_skip, "topk": args.topk,
                    "low_chars": args.low_chars, "variant": args.variant,
                    "n_shifted": sum(1 for c in cues if c["shift"]), "n_choked": sum(1 for c in cues if c["choked"]),
-                   "keyframe_hard": args.keyframe_hard, "choke": args.choke, "n_other_char": sum(1 for c in cues if c["char"] != args.singer), "rho": args.rho, "window": [args.start, round(args.start + n * DT, 1)],
+                   "keyframe_hard": args.keyframe_hard, "choke": args.choke, "play_full": bool(getattr(args, "play_full", False)), "n_other_char": sum(1 for c in cues if c["char"] != args.singer), "rho": args.rho, "window": [args.start, round(args.start + n * DT, 1)],
                    "n_tokens": len(seq), "token_dur_median": pm["dur_median"],
                    "distinct_lines": pm["distinct_lines"], "crop_mean": pm["crop_mean"],
                    "gain_db_median_abs": round(float(np.median(np.abs([c["gain_db"] for c in cues]))), 1),

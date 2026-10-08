@@ -1,0 +1,63 @@
+{
+ "version": "v10",
+ "song": "killkiss_original",
+ "singer": "长崎爽世",
+ "lambda_N": 2.5,
+ "w_vowel": 0.0,
+ "w_onset": 2.0,
+ "w_keyalign": 3.0,
+ "shifts": "-4,-3,-2,-1,0",
+ "w_pitch": 3.0,
+ "c_skip": 5.0,
+ "topk": 128,
+ "low_chars": "椎名立希,八幡海铃,若叶睦",
+ "variant": "joint",
+ "n_shifted": 19,
+ "n_choked": 0,
+ "keyframe_hard": true,
+ "choke": true,
+ "play_full": true,
+ "n_other_char": 18,
+ "rho": 0.7,
+ "window": [
+  0.0,
+  111.1
+ ],
+ "n_tokens": 256,
+ "token_dur_median": 0.24,
+ "distinct_lines": 99,
+ "crop_mean": 0.17,
+ "gain_db_median_abs": 2.1,
+ "processing": "none (constant gain + 5 ms fades)",
+ "M3_onsets_hit_150ms": 0.591,
+ "M3_onset_lag_median_ms": 10.0,
+ "M3_onset_within_30ms": 0.203,
+ "M3_onset_late_gt30ms": 0.344,
+ "M3_onset_early_gt30ms": 0.313,
+ "pitch_bands": {
+  "band_0_61": {
+   "share": 0.126,
+   "covered": 0.536,
+   "acc50": 0.613
+  },
+  "band_61_68": {
+   "share": 0.536,
+   "covered": 0.87,
+   "acc50": 0.626
+  },
+  "band_68_99": {
+   "share": 0.338,
+   "covered": 0.816,
+   "acc50": 0.563
+  }
+ },
+ "M1_pitch_acc50": 0.604,
+ "M1_pitch_acc100": 0.81,
+ "M1_pitch_cents_median": 37.9,
+ "M2_voicing_recall": 0.81,
+ "M2_voicing_false_alarm": 0.23,
+ "M3_onset_f1_50ms": 0.352,
+ "M5_dynamics_corr": 0.562,
+ "inst_db": -6.0,
+ "ref_name": "v9_killkiss"
+}

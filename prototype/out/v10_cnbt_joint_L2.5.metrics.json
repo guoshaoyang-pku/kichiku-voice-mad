@@ -1,0 +1,63 @@
+{
+ "version": "v10",
+ "song": "cnbt_original",
+ "singer": "长崎爽世",
+ "lambda_N": 2.5,
+ "w_vowel": 0.0,
+ "w_onset": 2.0,
+ "w_keyalign": 3.0,
+ "shifts": "-4,-3,-2,-1,0",
+ "w_pitch": 3.0,
+ "c_skip": 5.0,
+ "topk": 128,
+ "low_chars": "椎名立希,八幡海铃,若叶睦",
+ "variant": "joint",
+ "n_shifted": 82,
+ "n_choked": 0,
+ "keyframe_hard": true,
+ "choke": true,
+ "play_full": true,
+ "n_other_char": 49,
+ "rho": 0.7,
+ "window": [
+  0.0,
+  77.0
+ ],
+ "n_tokens": 160,
+ "token_dur_median": 0.31,
+ "distinct_lines": 92,
+ "crop_mean": 0.128,
+ "gain_db_median_abs": 2.4,
+ "processing": "none (constant gain + 5 ms fades)",
+ "M3_onsets_hit_150ms": 0.719,
+ "M3_onset_lag_median_ms": 0.0,
+ "M3_onset_within_30ms": 0.289,
+ "M3_onset_late_gt30ms": 0.283,
+ "M3_onset_early_gt30ms": 0.315,
+ "pitch_bands": {
+  "band_0_61": {
+   "share": 0.78,
+   "covered": 0.772,
+   "acc50": 0.605
+  },
+  "band_61_68": {
+   "share": 0.204,
+   "covered": 0.814,
+   "acc50": 0.619
+  },
+  "band_68_99": {
+   "share": 0.016,
+   "covered": 0.89,
+   "acc50": 0.63
+  }
+ },
+ "M1_pitch_acc50": 0.608,
+ "M1_pitch_acc100": 0.824,
+ "M1_pitch_cents_median": 38.8,
+ "M2_voicing_recall": 0.783,
+ "M2_voicing_false_alarm": 0.371,
+ "M3_onset_f1_50ms": 0.382,
+ "M5_dynamics_corr": 0.526,
+ "inst_db": -6.0,
+ "ref_name": "v9_cnbt"
+}

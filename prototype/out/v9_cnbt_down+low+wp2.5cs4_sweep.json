@@ -1,0 +1,26 @@
+[
+ {
+  "N": 86,
+  "dur_median": 0.33,
+  "pitch_acc50": 0.711,
+  "pitch_acc100": 0.934,
+  "voicing_recall": 0.677,
+  "false_alarm": 0.048,
+  "keyframe_hit_30ms": 0.581,
+  "lambda_N": 2.5,
+  "distinct_lines": 52,
+  "crop_mean": 0.115
+ },
+ {
+  "N": 84,
+  "dur_median": 0.33,
+  "pitch_acc50": 0.713,
+  "pitch_acc100": 0.934,
+  "voicing_recall": 0.671,
+  "false_alarm": 0.045,
+  "keyframe_hit_30ms": 0.576,
+  "lambda_N": 5.0,
+  "distinct_lines": 51,
+  "crop_mean": 0.117
+ }
+]

@@ -169,9 +169,10 @@ def accomp(args):
     if args.dur_limit:
         common += ["--dur-limit", str(args.dur_limit)]
 
-    # A: joint 连带拟合（沿用 v9 胜者搜索配置，drums+other 打底）
+    # A: joint 连带拟合（沿用 v9 胜者搜索配置，drums+other 打底；完整播放：拟合可裁剪，播放放完整原句）
     cmd_a = common + ["--out", str(OUT / f"v10_{args.name}_joint"), "--variant", "joint",
                       "--target-mode", "joint", "--backing", "nobass", "--keyframe-hard",
+                      "--play-full",
                       f"--c-skip={win['c_skip']:g}", f"--w-keyalign={W_KEYALIGN:g}",
                       f"--w-pitch={win['w_pitch']:g}", f"--topk={TOPK}",
                       "--lambdas", f"{lam:g}", "--render", f"{lam:g}", f"--shifts={shifts}"]
@@ -179,6 +180,9 @@ def accomp(args):
     r = subprocess.run(cmd_a, capture_output=True, text=True)
     if r.returncode != 0:
         print(r.stdout[-3000:]); print(r.stderr[-3000:]); sys.exit("joint run failed")
+    if getattr(args, "skip_sep", False):
+        print(f"[accomp] done (joint only): v10_{args.name}_joint_*", flush=True)
+        return
 
     # B: 贝斯声部独立拟合（不卡点硬约束、w_keyalign=0、wp=1、λ=5 稀疏）
     blat = 5.0
@@ -250,6 +254,8 @@ def main():
         if name == "render":
             p.add_argument("--variant", default="down+low")
             p.add_argument("--lambda", dest="lam", type=float, default=10.0)
+        if name == "accomp":
+            p.add_argument("--skip-sep", action="store_true", help="只出 joint 连带拟合（用户拍板的优先版本）")
     args = ap.parse_args()
     if args.cmd == "prepare":
         prepare(args)

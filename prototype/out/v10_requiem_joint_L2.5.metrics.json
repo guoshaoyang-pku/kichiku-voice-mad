@@ -1,0 +1,63 @@
+{
+ "version": "v10",
+ "song": "requiem_original",
+ "singer": "长崎爽世",
+ "lambda_N": 2.5,
+ "w_vowel": 0.0,
+ "w_onset": 2.0,
+ "w_keyalign": 3.0,
+ "shifts": "-4,-3,-2,-1,0",
+ "w_pitch": 3.0,
+ "c_skip": 5.0,
+ "topk": 128,
+ "low_chars": "椎名立希,八幡海铃,若叶睦",
+ "variant": "joint",
+ "n_shifted": 196,
+ "n_choked": 0,
+ "keyframe_hard": true,
+ "choke": true,
+ "play_full": true,
+ "n_other_char": 129,
+ "rho": 0.7,
+ "window": [
+  0.0,
+  210.6
+ ],
+ "n_tokens": 573,
+ "token_dur_median": 0.23,
+ "distinct_lines": 190,
+ "crop_mean": 0.139,
+ "gain_db_median_abs": 2.0,
+ "processing": "none (constant gain + 5 ms fades)",
+ "M3_onsets_hit_150ms": 0.838,
+ "M3_onset_lag_median_ms": 0.0,
+ "M3_onset_within_30ms": 0.396,
+ "M3_onset_late_gt30ms": 0.258,
+ "M3_onset_early_gt30ms": 0.269,
+ "pitch_bands": {
+  "band_0_61": {
+   "share": 0.514,
+   "covered": 0.853,
+   "acc50": 0.586
+  },
+  "band_61_68": {
+   "share": 0.432,
+   "covered": 0.839,
+   "acc50": 0.577
+  },
+  "band_68_99": {
+   "share": 0.055,
+   "covered": 0.751,
+   "acc50": 0.497
+  }
+ },
+ "M1_pitch_acc50": 0.578,
+ "M1_pitch_acc100": 0.794,
+ "M1_pitch_cents_median": 40.1,
+ "M2_voicing_recall": 0.841,
+ "M2_voicing_false_alarm": 0.417,
+ "M3_onset_f1_50ms": 0.404,
+ "M5_dynamics_corr": 0.513,
+ "inst_db": -6.0,
+ "ref_name": "v9_requiem"
+}
