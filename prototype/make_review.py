@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Generate prototype/review.html: v2 (original-audio target) on top, v1 below."""
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).parent
@@ -52,8 +53,15 @@ def v9_section():
         return ""
     names = {"raw": "素世原调", "down": "素世 + 变慢降调", "down+low": "素世降调 + 低音借他人",
              "down+low+scale": "素世降调 + 低音借他人 + 长度缩放"}
-    h = ["""<h2>v9 · 全自动化管线（auto_mad）：码本变体 × λ_N 自动调参</h2>
-<p class="note">引擎与 v8 相同（关键帧卡点 + 掐断 + 有限降调），但配置不再手挑：对每首歌自动跑结构变体（原调 / 降调 / 降调+低音借他人，可选 +长度缩放）× λ_N 扫描，用"听起来对劲"清单标量化打分（音高 ±50 为主 + 有声召回/误报 + 起音卡点，门槛：召回 ≥70%、误报 ≤15%），胜者自动渲染。全程无需人工试参。</p>"""]
+    def vname(v):
+        if v in names:
+            return names[v]
+        m = re.match(r"(down\+low(?:\+scale)?)\+wp([\d.]+)cs([\d.]+)$", v)
+        if m:
+            return f"{names.get(m.group(1), m.group(1))}，音高权重 {m.group(2)} / skip 代价 {m.group(3)}"
+        return v
+    h = ["""<h2>v9 · 全自动化管线（auto_mad）：码本变体 × (音高权重, skip代价) × λ_N 自动调参</h2>
+<p class="note">引擎 = v8 关键帧卡点 + <b>内部起音对齐代价</b>（目标关键帧到音效最近内部起音的距离惩罚，w_keyalign=3，春日影卡点 ±30ms 从 37%→70%）+ topk=128。配置不再手挑：对每首歌自动扫 (w_pitch, c_skip) 配对网格 × λ_N，用"听起来对劲"清单标量化打分（音高 ±50 为主 + 有声召回/误报 + 起音卡点，门槛：召回 ≥70%、误报 ≤15%），胜者自动渲染。</p>"""]
     for tf in sorted(OUT.glob("v9_*_tune.json")):
         rep = json.load(open(tf))
         h.append(f"<details><summary>{rep['song']} 自动调参过程（{len(rep['table'])} 个配置）</summary>"
@@ -61,7 +69,7 @@ def v9_section():
         for t in sorted(rep["table"], key=lambda t: -t["score"]):
             win = " <b>← 选中</b>" if (t["variant"] == rep["winner"]["variant"] and t["lambda_N"] == rep["winner"]["lambda_N"]) else ""
             gate = "（过门槛）" if t["gated"] else ""
-            h.append(f"<tr><td>{names.get(t['variant'], t['variant'])}</td><td>{t['lambda_N']:g}</td><td>{t['score']}{win}{gate}</td>"
+            h.append(f"<tr><td>{vname(t['variant'])}</td><td>{t['lambda_N']:g}</td><td>{t['score']}{win}{gate}</td>"
                      f"<td>{t['N']}</td><td>{round(t['pitch_acc50']*100)}%</td><td>{round(t['pitch_acc100']*100)}%</td>"
                      f"<td>{round(t['voicing_recall']*100)}%</td><td>{round(t['false_alarm']*100)}%</td>"
                      f"<td>{round(t['keyframe_hit_30ms']*100)}%</td><td>{t['distinct_lines']}</td></tr>")
@@ -80,7 +88,7 @@ def v9_section():
                   f"音高 ±50 音分 {round(m['M1_pitch_acc50']*100)}%，±100 {round(m['M1_pitch_acc100']*100)}%，该唱在唱 {round(m['M2_voicing_recall']*100)}%<br>"
                   f"低音区（MIDI&lt;61，占 {round(b.get('share', 0)*100)}%）覆盖 {round(b.get('covered', 0)*100)}%，准 {round(b.get('acc50', 0)*100)}%")
             png = f"diagnostics/{name}_placement.png"
-            h.append(f"<tr><td><code>{name}</code><br>{names.get(m.get('variant'), m.get('variant'))}</td><td>{mt}</td><td><b>人声干声</b><br>{audio(name + '_vocal_dry.mp3')}<br><b>混音</b><br>{audio(name + '.mp3')}<br><a href=\"out/{name}_fragments/index.html\">逐音效碎片</a><br>{image(png) if (OUT / png).exists() else ''}</td></tr>")
+            h.append(f"<tr><td><code>{name}</code><br>{vname(m.get('variant'))}</td><td>{mt}</td><td><b>人声干声</b><br>{audio(name + '_vocal_dry.mp3')}<br><b>混音</b><br>{audio(name + '.mp3')}<br><a href=\"out/{name}_fragments/index.html\">逐音效碎片</a><br>{image(png) if (OUT / png).exists() else ''}</td></tr>")
         h.append("</table>")
     return "\n".join(h)
 

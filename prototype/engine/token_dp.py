@@ -222,9 +222,14 @@ def build_tokens(clips, contours, rho, max_len, pad=0.06, codes=None, attacks=No
                     att_r = _rs(att[a:b], l1)
                     head = att_r[:max(4, min(l1, 25))]
                     fa = int(np.argmax(head)) if head.max() > 0.5 else int(np.argmax(_rs(v[a:b].astype(float), l1) > 0.5))
+                    offs = np.flatnonzero(att_r > 0.4)
+                    if len(offs):
+                        ramp = np.minimum(np.abs(np.arange(l1)[:, None] - offs[None]).min(1), 15) / 15.0
+                    else:
+                        ramp = np.ones(l1)
                     t_.update({"shift": sh, "st": _rs(st[a:b], l1) + sh, "fa": fa,
                                "v": _rs(v[a:b].astype(float), l1) > 0.5, "db": _rs(db[a:b], l1),
-                               "att": _rs(att[a:b], l1).astype(np.float32),
+                               "att": att_r.astype(np.float32), "ramp": ramp.astype(np.float32),
                                "lab": _rs(lab[a:b], l1, nearest=True) if lab is not None else None,
                                "pen": (0.0 if is_primary else char_cost) + w_shift * abs(sh)})
                     toks.append(t_)
@@ -238,28 +243,32 @@ def token_tensors(toks, lmax, with_lab):
     D = torch.zeros((n, lmax))
     LB = torch.zeros((n, lmax), dtype=torch.long)
     A = torch.zeros((n, lmax))
+    R = torch.ones((n, lmax))
     L = torch.zeros(n, dtype=torch.long)
     for k, t in enumerate(toks):
         l = len(t["st"])
         A[k, :l] = torch.from_numpy(t["att"])
+        R[k, :l] = torch.from_numpy(t.get("ramp", np.ones(l, dtype=np.float32)))
         U[k, :l] = torch.from_numpy(t["st"].astype(np.float32))
         V[k, :l] = torch.from_numpy(t["v"])
         D[k, :l] = torch.from_numpy(t["db"].astype(np.float32))
         if with_lab:
             LB[k, :l] = torch.from_numpy(t["lab"].astype(np.int64))
         L[k] = l
-    return U, V, D, LB, L, A
+    return U, V, D, LB, L, A, R
 
 
 def candidates(T, TV, TD, TL, W, TA, starts, toks, dtab, args):
     lmax = max(len(t["st"]) for t in toks)
     with_lab = dtab is not None
-    U, V, D, LB, L, A = [x.to(DEV) for x in token_tensors(toks, lmax, with_lab)]
+    U, V, D, LB, L, A, R = [x.to(DEV) for x in token_tensors(toks, lmax, with_lab)]
     crop = torch.tensor([float(t["crop"]) for t in toks], dtype=torch.float32, device=DEV)
     pen = torch.tensor([float(t["pen"]) for t in toks], dtype=torch.float32, device=DEV)
     fa = torch.tensor([int(t["fa"]) for t in toks], dtype=torch.long)
     KM = getattr(args, "_keymask", None)
     KMp = torch.cat([torch.from_numpy(KM), torch.zeros(lmax + 64, dtype=torch.bool)]) if KM is not None else None
+    WKA = getattr(args, "_wka", None)
+    WKAp = torch.cat([torch.from_numpy(WKA), torch.zeros(lmax + 64)]) if WKA is not None else None
     inlen = torch.arange(lmax, device=DEV)[None] < L[:, None]
     Vu = (V & inlen)[None]
     pad = lambda x, z: torch.cat([x, torch.full((lmax,), z, dtype=x.dtype)])
@@ -289,6 +298,9 @@ def candidates(T, TV, TD, TL, W, TA, starts, toks, dtab, args):
         if args.w_onset > 0:
             TAt = TAp[gi].to(DEV)[:, None]
             Cf = Cf + args.w_onset * ((TAt - A[None]) ** 2) * il
+        if getattr(args, "w_keyalign", 0.0) > 0:
+            WKAt = WKAp[gi].to(DEV)[:, None]
+            Cf = Cf + args.w_keyalign * WKAt * R[None] * il
         if not args.choke:
             c = Cf.sum(-1) + args.l_crop * crop[None] + pen[None]
             if KMp is not None:
@@ -488,7 +500,7 @@ def render(seq, toks, args, stems, span, rdb, TV, sm, out, i0, i1, y16, tag_note
                  + "".join(f'<td><audio controls preload=none src="{c["k"]:02d}_{s}.mp3"></audio></td>' for s in "ABC") + "</tr>")
     h.append("</table>")
     (frag / "index.html").write_text("\n".join(h))
-    json.dump(cues, open(out.with_suffix(".cues.json"), "w"), ensure_ascii=False, indent=1)
+    json.dump(cues, open(out.parent / (out.name + ".cues.json"), "w"), ensure_ascii=False, indent=1)
 
     yr = librosa.resample(voc[:end], orig_sr=FS, target_sr=SR16)
     x = torch.from_numpy(yr).float().unsqueeze(0).to(DEV)
@@ -561,6 +573,8 @@ def main():
     ap.add_argument("--c-skip", type=float, default=1.2)
     ap.add_argument("--w-vowel", type=float, default=0.0)
     ap.add_argument("--w-onset", type=float, default=0.0)
+    ap.add_argument("--w-keyalign", type=float, default=0.0,
+                    help="penalize distance from target key frames to nearest internal attack of token")
     ap.add_argument("--keyframe-hard", action="store_true", help="first strong attack of every token on a key frame")
     ap.add_argument("--choke", action="store_true", help="a token may be cut by the next one at a key frame")
     ap.add_argument("--choke-keep", type=float, default=0.4)
@@ -646,6 +660,11 @@ def main():
 
     near = np.convolve(TV.astype(float), np.ones(61), mode="same") > 0
     keys = np.unique(np.r_[pk_t, steps]).astype(int)
+    if args.w_keyalign > 0:
+        wka = np.zeros(n, dtype=np.float32)
+        for k_ in keys:
+            wka[max(0, k_ - 5):k_ + 6] = 1.0
+        args._wka = wka
     if args.keyframe_hard:
         km = np.zeros(n, dtype=bool)
         for k_ in keys:
@@ -722,7 +741,8 @@ def main():
         cues, mr, obs, rv = render(seq, toks, args, stems, n * DT, rdb, TV, sm, name, i0, i1, y16, note)
         pm = [m for m in sweep if m["lambda_N"] == l_n][0]
         metrics = {"version": args.version, "song": Path(args.mix).stem, "singer": args.singer, "lambda_N": l_n,
-                   "w_vowel": args.w_vowel, "w_onset": args.w_onset, "shifts": args.shifts,
+                   "w_vowel": args.w_vowel, "w_onset": args.w_onset, "w_keyalign": getattr(args, "w_keyalign", 0.0), "shifts": args.shifts,
+                   "w_pitch": args.w_pitch, "c_skip": args.c_skip, "topk": args.topk,
                    "low_chars": args.low_chars, "variant": args.variant,
                    "n_shifted": sum(1 for c in cues if c["shift"]), "n_choked": sum(1 for c in cues if c["choked"]),
                    "keyframe_hard": args.keyframe_hard, "choke": args.choke, "n_other_char": sum(1 for c in cues if c["char"] != args.singer), "rho": args.rho, "window": [args.start, round(args.start + n * DT, 1)],
@@ -731,7 +751,7 @@ def main():
                    "gain_db_median_abs": round(float(np.median(np.abs([c["gain_db"] for c in cues]))), 1),
                    "processing": "none (constant gain + 5 ms fades)", **mr, "inst_db": args.inst_db,
                    "ref_name": args.ref_name}
-        json.dump(metrics, open(name.with_suffix(".metrics.json"), "w"), ensure_ascii=False, indent=1)
+        json.dump(metrics, open(name.parent / (name.name + ".metrics.json"), "w"), ensure_ascii=False, indent=1)
         print(json.dumps(metrics, ensure_ascii=False), flush=True)
         show = min(n * DT, 50.0)
         k1 = int(show / DT)

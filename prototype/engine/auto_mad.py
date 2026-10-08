@@ -31,7 +31,11 @@ OUT = PROTO / "out"
 ENGINE = HERE / "token_dp.py"
 
 LOW_CHARS = "椎名立希,八幡海铃,若叶睦"
-BASE_LAMBDAS = [5.0, 10.0, 20.0]
+BASE_LAMBDAS = [2.5, 5.0]
+# (w_pitch, c_skip) 配对扫描：音高压得越狠，skip 代价要越高才能保住覆盖（春日影探针结论）
+WP_CS = [(2.0, 3.0), (2.5, 4.0), (3.0, 5.0)]
+W_KEYALIGN = 3.0
+TOPK = 128
 
 
 def song_paths(name):
@@ -71,23 +75,23 @@ def score(m):
 
 
 def variants(args):
-    vs = [("raw", "0", ""),
-          ("down", "-4,-3,-2,-1,0", ""),
-          ("down+low", "-4,-3,-2,-1,0", LOW_CHARS)]
+    vs = [("down+low", "-4,-3,-2,-1,0", LOW_CHARS)]
     if args.len_scale:
         vs.append(("down+low+scale", "-4,-3,-2,-1.73,-1,0,1.78", LOW_CHARS))
     return vs
 
 
-def run_engine(args, vtag, shifts, low_chars, render, extra=()):
+def run_engine(args, vtag, shifts, low_chars, render, w_pitch=1.0, c_skip=2.0, extra=()):
     mix, stems = song_paths(args.name)
     d = args.song_speed
     lambdas = ",".join(f"{x / d:g}" for x in BASE_LAMBDAS)
     cmd = [sys.executable, str(ENGINE), "--mix", str(mix), "--stems", str(stems),
            "--out", str(OUT / f"v9_{args.name}_{vtag}"), "--version", "v9", "--variant", vtag,
            "--ref-name", f"v9_{args.name}", "--singer", args.singer,
-           "--keyframe-hard", "--choke", "--w-onset", "2", "--c-skip", f"{2.0 / d:g}",
-           "--key-tol", str(max(1, round(d))), "--lambdas", lambdas,
+           "--keyframe-hard", "--choke", "--w-onset", "2", f"--c-skip={c_skip / d:g}",
+           "--key-tol", str(max(1, round(d))), f"--w-keyalign={W_KEYALIGN:g}",
+           f"--w-pitch={w_pitch:g}", f"--topk={TOPK}",
+           "--lambdas", lambdas,
            f"--shifts={shifts}", "--render", render,
            "--start", str(args.start)]
     if low_chars:
@@ -108,24 +112,30 @@ def tune(args):
     OUT.mkdir(exist_ok=True)
     table = []
     for vtag, shifts, low in variants(args):
-        print(f"[tune] variant {vtag}", flush=True)
-        out = run_engine(args, vtag, shifts, low, render="")
-        sweep = json.load(open(OUT / f"v9_{args.name}_{vtag}_sweep.json"))
-        for m in sweep:
-            s, gated = score(m)
-            table.append({"variant": vtag, "lambda_N": m["lambda_N"], "score": round(s, 4),
-                          "gated": gated, **{k: m[k] for k in
-                          ("N", "dur_median", "pitch_acc50", "pitch_acc100",
-                           "voicing_recall", "false_alarm", "keyframe_hit_30ms",
-                           "distinct_lines", "crop_mean")}})
+        for wp, cs in WP_CS:
+            tag = f"{vtag}+wp{wp:g}cs{cs:g}"
+            print(f"[tune] variant {tag}", flush=True)
+            run_engine(args, tag, shifts, low, render="", w_pitch=wp, c_skip=cs)
+            sweep = json.load(open(OUT / f"v9_{args.name}_{tag}_sweep.json"))
+            for m in sweep:
+                s, gated = score(m)
+                table.append({"variant": tag, "w_pitch": wp, "c_skip": cs, "lambda_N": m["lambda_N"], "score": round(s, 4),
+                              "gated": gated, **{k: m[k] for k in
+                              ("N", "dur_median", "pitch_acc50", "pitch_acc100",
+                               "voicing_recall", "false_alarm", "keyframe_hit_30ms",
+                               "distinct_lines", "crop_mean")}})
     ok = [t for t in table if not t["gated"]] or table
     best = max(ok, key=lambda t: (t["score"], t["voicing_recall"]))
     print(f"[tune] winner: {best['variant']} λ_N={best['lambda_N']:g} score={best['score']}", flush=True)
     vtag = best["variant"]
-    shifts, low = next((s, l) for v, s, l in variants(args) if v == vtag)
-    run_engine(args, vtag, shifts, low, render=f"{best['lambda_N']:g}")
+    vs = variants(args)
+    base_v = sorted((v for v, _, _ in vs if vtag.startswith(v)), key=len)[-1]
+    shifts, low = next((s, l) for v, s, l in vs if v == base_v)
+    run_engine(args, vtag, shifts, low, render=f"{best['lambda_N']:g}",
+               w_pitch=best["w_pitch"], c_skip=best["c_skip"])
     report = {"song": args.name, "singer": args.singer, "song_speed": args.song_speed,
-              "len_scale": args.len_scale, "winner": best, "table": table,
+              "len_scale": args.len_scale, "w_keyalign": W_KEYALIGN, "topk": TOPK,
+              "winner": best, "table": table,
               "score_def": "acc50 + 0.5*acc100 + 0.8*recall - 0.8*false_alarm + 0.6*keyframe30; "
                            "gates: recall>=0.70, false_alarm<=0.15"}
     json.dump(report, open(OUT / f"v9_{args.name}_tune.json", "w"), ensure_ascii=False, indent=1)
