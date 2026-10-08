@@ -24,7 +24,9 @@ Render a song's vocal melody with an anime character's spoken lines — no vocod
 ## Repo layout
 
 ```
-prototype/engine/token_dp.py   # 当前引擎（v8），其他 *.py 为 v3-v7 演进与诊断工具
+prototype/engine/token_dp.py   # 当前引擎（v8-v10），其他 *.py 为 v3-v7 演进与诊断工具
+prototype/engine/auto_mad.py   # v9 自动调参 + v10 带伴奏拟合（accomp 子命令）
+CLUSTER.md                     # A100 集群多卡运行 runbook
 prototype/lib/                 # 素材库构建与索引（音频 samples/ 不在仓库内）
 prototype/legacy/              # v1-v7 旧引擎与旧指标，仅存档
 prototype/make_review.py       # 渲染结果 → review.html 验收页
@@ -35,6 +37,8 @@ materials/                     # 【不在仓库】原始素材 134GB，见下�
 **音频不入库**：原曲、台词、渲染产物均有版权问题，仓库只含代码、元数据 JSON、指标与诊断图。
 
 ## Quickstart
+
+Linux/CUDA 也可运行（见 CLUSTER.md）。
 
 ```bash
 ./setup.sh                    # venv + 依赖（macOS Apple Silicon 验证，MPS 加速）

@@ -47,6 +47,49 @@ audio{width:100%;height:34px}.note{color:#555;font-size:.9rem}code{background:#f
 </style></head><body>"""
 
 
+def v10_section():
+    seps = {p.name[:-len(".metrics.json")]: json.load(open(p)) for p in OUT.glob("v10_*_sep.metrics.json")}
+    joints = {}
+    for p in OUT.glob("v10_*_joint_L*.metrics.json"):
+        joints[p.name.split("_joint_")[0]] = (p.name[:-len(".metrics.json")], json.load(open(p)))
+    if not seps and not joints:
+        return ""
+    h = ["""<h2>v10 · 带伴奏拟合：A 连带拟合（单流·间隙贝斯）vs B 分别拟合（主旋律+贝斯双流合成）</h2>
+<p class="note">A（joint）：一条 token 流唱主旋律，人声长间隙（≥0.4s）自动接鬼畜贝斯（贝斯轨 +2 八度哼唱），像一个人把整首哼完；B（sep）：v9 主旋律渲染 + 贝斯声部独立 DP 渲染，两流叠加成复音。两版都用原曲 drums+other 打底（-6 dB），鬼畜贝斯取代原贝斯。</p>"""]
+    songs = sorted({k[len("v10_"):-len("_sep")] for k in seps} | {k[len("v10_"):] for k in joints})
+    for song in songs:
+        ref = f"v9_{song}"
+        h.append(f"<h3>{song}</h3><p>原曲 {audio(ref + '_orig_mix.mp3')} 原曲人声 {audio(ref + '_orig_vocal.mp3')}</p>")
+        h.append("<table><tr><th>版本</th><th>指标</th><th>试听</th></tr>")
+        jkey = f"v10_{song}"
+        if jkey in joints:
+            jname, jm = joints[jkey]
+            mt = (f"{jm['n_tokens']} 个音效（掐断 {jm.get('n_choked', 0)}，降调 {jm.get('n_shifted', 0)}）<br>"
+                  f"±50 音分 {round(jm['M1_pitch_acc50']*100)}%，±100 {round(jm['M1_pitch_acc100']*100)}%，该唱在唱 {round(jm['M2_voicing_recall']*100)}%<br>"
+                  f"起音 ±30 ms {round(jm['M3_onset_within_30ms']*100)}%（含贝斯段）")
+            frag = f"out/{jname}_fragments/index.html"
+            h.append(f"<tr><td><b>A 连带拟合</b><br><code>{jname}</code></td><td>{mt}</td><td>"
+                     f"<b>鬼畜干声</b><br>{audio(jname + '_vocal_dry.mp3')}<br><b>混音（drums+other 打底）</b><br>{audio(jname + '.mp3')}"
+                     + (f'<br><a href="{frag}">逐音效碎片</a>' if Path(frag).exists() else "") + "</td></tr>")
+        skey = f"v10_{song}_sep"
+        if skey in seps:
+            sm_ = seps[skey]
+            mel, bas = sm_["melody"], sm_["bass"]
+            mt = (f"主旋律（{sm_['melody_config']} λ={sm_['melody_lambda']:g}）：±50 {round(mel['M1_pitch_acc50']*100)}%，"
+                  f"卡点 ±30 ms {round(mel['M3_onset_within_30ms']*100)}%，{mel['n_tokens']} 音效<br>"
+                  f"贝斯（+{sm_['bass_accomp_octave']} 八度哼唱，λ=5）：±50 {round(bas['M1_pitch_acc50']*100)}%，"
+                  f"±100 {round(bas['M1_pitch_acc100']*100)}%，覆盖 {round(bas['M2_voicing_recall']*100)}%，"
+                  f"{bas['n_tokens']} 音效 / {bas['distinct_lines']} 句")
+            bname = f"{skey}_bass_L5"
+            frag = f"out/{bname}_fragments/index.html"
+            h.append(f"<tr><td><b>B 分别拟合</b><br><code>{skey}</code></td><td>{mt}</td><td>"
+                     f"<b>鬼畜干声（旋律+贝斯）</b><br>{audio(skey + '_dry.mp3')}<br><b>混音（drums+other 打底）</b><br>{audio(skey + '.mp3')}"
+                     f"<br><b>贝斯单独听</b><br>{audio(bname + '_vocal_dry.mp3')}"
+                     + (f'<br><a href="{frag}">贝斯碎片</a>' if Path(frag).exists() else "") + "</td></tr>")
+        h.append("</table>")
+    return "\n".join(h)
+
+
 def v9_section():
     rows = [(mf.name[:-len(".metrics.json")], json.load(open(mf))) for mf in sorted(OUT.glob("v9_*.metrics.json"))]
     if not rows:
@@ -272,7 +315,7 @@ def v1_section():
 
 
 def main():
-    h = [HEAD, "<h1>鬼畜调音 · 验收</h1>", v9_section(), v8_section(), v7_section(), v5_section(), v4_section(), v3_section(), v2_section(), v1_section(),
+    h = [HEAD, "<h1>鬼畜调音 · 验收</h1>", v10_section(), v9_section(), v8_section(), v7_section(), v5_section(), v4_section(), v3_section(), v2_section(), v1_section(),
          '<p class="note">旧结果：<code>legacy/out/</code>；旧引擎：<code>legacy/engine/</code>。</p></body></html>']
     (ROOT / "review.html").write_text("\n".join(x for x in h if x))
     n2 = len(list(OUT.glob("v2_*.metrics.json"))) + len(list(OUT.glob("v3_*.metrics.json")))

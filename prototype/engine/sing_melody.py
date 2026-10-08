@@ -36,14 +36,14 @@ import audio_match as AM  # noqa: E402
 FS = 32000
 SR16 = 16000
 HOP = 160
-DEV = "mps" if torch.backends.mps.is_available() else "cpu"
+DEV = "mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu")
 CACHE = HERE.parent / "materials" / "contour_cache"
 
 
 # ------------------------------------------------------------ transcription
-def crepe_track(path):
+def crepe_track(path, fmin=70.0):
     CACHE.mkdir(parents=True, exist_ok=True)
-    cache = CACHE / f"crepe_viterbi_{Path(path).parent.name}_{Path(path).stem}.npz"
+    cache = CACHE / f"crepe_viterbi_{Path(path).parent.name}_{Path(path).stem}_{int(fmin)}.npz"
     if cache.exists():
         z = np.load(cache)
         return z["t"], z["f0"], z["per"], z["rms"]
@@ -52,7 +52,7 @@ def crepe_track(path):
     step = 30 * SR16
     for i in range(0, len(y), step):
         x = torch.from_numpy(y[i:i + step]).float().unsqueeze(0).to(DEV)
-        f0, per = torchcrepe.predict(x, SR16, HOP, 70.0, 1000.0, model="full",
+        f0, per = torchcrepe.predict(x, SR16, HOP, fmin, 1000.0, model="full",
                                      decoder=torchcrepe.decode.viterbi, return_periodicity=True,
                                      device=DEV, batch_size=1024, pad=True)
         n = (min(step, len(y) - i)) // HOP

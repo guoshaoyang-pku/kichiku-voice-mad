@@ -411,6 +411,32 @@ def predicted_metrics(seq, toks, TV, sm, n, keys=None):
 
 
 # ------------------------------------------------------------ render
+def write_fragments(cues, voc, yv, out, tag_note):
+    """逐音效碎片页：A0 完整原句（裁剪前）/ A 素材原声（裁剪后）/ B 原曲人声 / C 渲染结果。
+    只需 cues + 渲染干声 + 原曲人声即可重建，可离线复用（regen_fragments.py）。"""
+    frag = out.with_name(out.name + "_fragments")
+    frag.mkdir(exist_ok=True)
+    h = ['<!doctype html><meta charset=utf-8><title>碎片</title><style>body{font-family:-apple-system,"PingFang SC";max-width:1080px;margin:2rem auto}td,th{border:1px solid #ddd;padding:.3rem .5rem;font-size:.85rem}table{border-collapse:collapse;width:100%}audio{width:100%;height:32px}</style>',
+         f'<h1>{out.name} 碎片：完整原句 / 素材原声 / 原曲这一段 / 放进去的结果</h1><p>{tag_note}。A0 是裁剪前的完整台词（素材原始音高），A 是实际使用的裁剪片段；C 与 A 只差常数音量、5 ms 淡入淡出（以及变速 token 的音高/速度）。</p>',
+         '<table><tr><th>#</th><th>token</th><th>A0 完整原句（裁剪前）</th><th>A 素材原声（裁剪后）</th><th>B 原曲人声这一段</th><th>C 渲染干声这一段</th></tr>']
+    for c in cues[:30]:
+        y = SM.clip_audio(c["path"])
+        r0 = y.astype(np.float32)
+        r_ = y[int(c["src_t0"] * FS):int(c["src_t1"] * FS)].astype(np.float32)
+        a, b = int(c["t0"] * FS), int(c["t1"] * FS)
+        for suf, sig in (("A0", r0), ("A", r_), ("B", yv[a:b]), ("C", voc[a:b])):
+            p = frag / f"{c['k']:02d}_{suf}.wav"
+            sf.write(p, sig / (np.max(np.abs(sig)) + 1e-9) * 0.7, FS)
+            SG.mp3(p)
+        h.append(f'<tr><td>{c["k"]:02d}</td><td>{c["t0"]:.2f}–{c["t1"]:.2f}s · 增益 {c["gain_db"]:+.1f} dB · 裁掉 {round(c["crop"] * 100)}% · 整句 {c.get("line_len", 0):.1f}s'
+                 + (f' · 变速 {c["shift"]:+g} 半音' if c.get("shift") else '')
+                 + (' · 被掐断' if c.get("choked") else '')
+                 + f'<br>{c["text"][:26]}</td>'
+                 + "".join(f'<td><audio controls preload=none src="{c["k"]:02d}_{s}.mp3"></audio></td>' for s in ("A0", "A", "B", "C")) + "</tr>")
+    h.append("</table>")
+    (frag / "index.html").write_text("\n".join(h))
+
+
 def render(seq, toks, args, stems, span, rdb, TV, sm, out, i0, i1, y16, tag_note):
     N = int((span + 3) * FS)
     voc = np.zeros(N, dtype=np.float32)
@@ -440,7 +466,8 @@ def render(seq, toks, args, stems, span, rdb, TV, sm, out, i0, i1, y16, tag_note
     voc_w = voc + wet * (np.sqrt(np.mean(voc ** 2)) / (np.sqrt(np.mean(wet ** 2)) + 1e-9)) * 10 ** (args.wet_db / 20)
     t0s = args.start
     inst = None
-    for name in ("drums", "bass", "other"):
+    for name in {"full": ("drums", "bass", "other"), "nobass": ("drums", "other"),
+                 "none": ()}[getattr(args, "backing", "full")]:
         p = stems / f"{name}.wav"
         info = sf.info(p)
         x, sr = sf.read(p, start=int(t0s * info.samplerate),
@@ -449,6 +476,8 @@ def render(seq, toks, args, stems, span, rdb, TV, sm, out, i0, i1, y16, tag_note
         x = x.mean(axis=1)
         x = librosa.resample(x, orig_sr=sr, target_sr=FS) if sr != FS else x
         inst = x if inst is None else inst[:len(x)] + x[:len(inst)]
+    if inst is None:
+        inst = np.zeros(N, dtype=np.float32)
     inst = np.pad(inst, (0, max(0, N - len(inst))))[:N]
     va = np.abs(voc_w) > 1e-4
     inst *= np.sqrt(np.mean(voc_w[va] ** 2)) * 10 ** (args.inst_db / 20) / (np.sqrt(np.mean(inst ** 2)) + 1e-9)
@@ -483,23 +512,8 @@ def render(seq, toks, args, stems, span, rdb, TV, sm, out, i0, i1, y16, tag_note
             SG.mp3(p)
 
     frag = out.with_name(out.name + "_fragments")
-    frag.mkdir(exist_ok=True)
     yv, _ = librosa.load(stems / "vocals.wav", sr=FS, mono=True, offset=t0s, duration=span + 2)
-    h = ['<!doctype html><meta charset=utf-8><title>碎片</title><style>body{font-family:-apple-system,"PingFang SC";max-width:980px;margin:2rem auto}td,th{border:1px solid #ddd;padding:.3rem .5rem;font-size:.85rem}table{border-collapse:collapse;width:100%}audio{width:100%;height:32px}</style>',
-         f'<h1>{out.name} 碎片：素材原声 / 原曲这一段 / 放进去的结果</h1><p>{tag_note}。C 与 A 应只差一个常数音量（以及 5 ms 淡入淡出）。</p>',
-         '<table><tr><th>#</th><th>token</th><th>A 素材原声（裁剪后）</th><th>B 原曲人声这一段</th><th>C 渲染干声这一段</th></tr>']
-    for c in cues[:30]:
-        y = SM.clip_audio(c["path"])
-        r_ = y[int(c["src_t0"] * FS):int(c["src_t1"] * FS)].astype(np.float32)
-        a, b = int(c["t0"] * FS), int(c["t1"] * FS)
-        for suf, sig in (("A", r_), ("B", yv[a:b]), ("C", voc[a:b])):
-            p = frag / f"{c['k']:02d}_{suf}.wav"
-            sf.write(p, sig / (np.max(np.abs(sig)) + 1e-9) * 0.7, FS)
-            SG.mp3(p)
-        h.append(f'<tr><td>{c["k"]:02d}</td><td>{c["t0"]:.2f}–{c["t1"]:.2f}s · 增益 {c["gain_db"]:+.1f} dB · 裁掉 {round(c["crop"] * 100)}%<br>{c["text"][:26]}</td>'
-                 + "".join(f'<td><audio controls preload=none src="{c["k"]:02d}_{s}.mp3"></audio></td>' for s in "ABC") + "</tr>")
-    h.append("</table>")
-    (frag / "index.html").write_text("\n".join(h))
+    write_fragments(cues, voc, yv, out, tag_note)
     json.dump(cues, open(out.parent / (out.name + ".cues.json"), "w"), ensure_ascii=False, indent=1)
 
     yr = librosa.resample(voc[:end], orig_sr=FS, target_sr=SR16)
@@ -594,6 +608,12 @@ def main():
     ap.add_argument("--lambdas", default="0,2,5,10,20,40,80")
     ap.add_argument("--render", default="", help="comma list of lambda_N values to render")
     ap.add_argument("--inst-db", type=float, default=-6.0)
+    ap.add_argument("--target-mode", default="vocal", choices=["vocal", "bass", "joint"],
+                    help="vocal: 主旋律; bass: 贝斯声部（升高 --accomp-octave 个八度唱）; joint: 主旋律 + 间隙贝斯填充")
+    ap.add_argument("--accomp-octave", type=int, default=2)
+    ap.add_argument("--gap-min", type=float, default=0.4, help="joint 模式下，人声间隙多長才填贝斯（秒）")
+    ap.add_argument("--backing", default="full", choices=["full", "nobass", "none"],
+                    help="混音打底：full=drums+bass+other; nobass=drums+other; none=只出干声")
     ap.add_argument("--wet-db", type=float, default=-16.0)
     ap.add_argument("--ref-name", default="v7_haruhikage")
     ap.add_argument("--version", default="v7")
@@ -623,6 +643,49 @@ def main():
     TD = rdb - np.percentile(rdb[TV], 90)
     n = len(TV)
 
+    # ---- 伴奏目标：贝斯轨升高 --accomp-octave 个八度（鬼畜式"哼贝斯"）----
+    pk_extra = None
+    if args.target_mode != "vocal":
+        bt, bf0, bper, brms = SG.crepe_track(str(stems / "bass.wav"), fmin=35.0)
+        bn_all = min(len(bt), n_all)
+        brdb_all = 20 * np.log10(brms[:bn_all] + 1e-9)
+        bf, bp, br = bf0[:bn_all][i0:i1], bper[:bn_all][i0:i1], brdb_all[i0:i1]
+        BV = (bp > 0.45) & (br > np.percentile(brdb_all, 95) - 30) & (bf > 30)
+        bst = 69 + 12 * np.log2(np.maximum(bf, 1e-3) / 440.0) + 12 * args.accomp_octave
+        bsm = bst.copy()
+        for i in np.flatnonzero(BV):
+            lo, hi = max(0, i - 3), min(len(bst), i + 4)
+            bsm[i] = np.median(bst[lo:hi][BV[lo:hi]])
+        by16, _ = librosa.load(stems / "bass.wav", sr=SR16, mono=True)
+        if args.target_mode == "bass":
+            TV, sm, rdb, y16 = BV, bsm, br, by16
+            W = np.where(BV, 0.25 + 0.75 * np.exp(-np.abs(np.gradient(bsm)) / DT / 25.0), 0.0)
+            TD = br - np.percentile(br[BV], 90)
+            print(f"bass target: voiced {BV.mean() * 100:.0f}%, sung +{args.accomp_octave} oct", flush=True)
+        else:  # joint：人声长间隙填贝斯
+            gap = np.zeros(n, dtype=bool)
+            i = 0
+            while i < n:
+                if TV[i]:
+                    i += 1
+                    continue
+                j = i
+                while j < n and not TV[j]:
+                    j += 1
+                if (j - i) * DT >= args.gap_min:
+                    gap[i:j] = True
+                i = j
+            JV = gap & BV
+            TV = TV | JV
+            sm = np.where(JV, bsm, sm)
+            rdb = np.where(JV, br, rdb)
+            TD = rdb - np.percentile(rdb[TV], 90)
+            Wb = 0.8 * (0.25 + 0.75 * np.exp(-np.abs(np.gradient(bsm)) / DT / 25.0))
+            W = np.where(JV, Wb, W)
+            pk_extra = onset_peaks(by16[i0 * HOP:i1 * HOP])
+            print(f"joint target: vocal + bass-filled gaps {JV.sum() * DT:.0f}s "
+                  f"(voiced {TV.mean() * 100:.0f}%)", flush=True)
+
     lib = PM.load_library(args.lib, None, None, 0.0, 99.0, 0.15)
     SM._lib_by_path.update({c["path"]: c for c in lib})
     hires.ensure_anime_maps([c["src"] for c in lib if c["work"].startswith("anime")])
@@ -649,6 +712,11 @@ def main():
                         low_chars_cap=args.low_cap)
     # target key frames: energy onsets of the original vocal + note changes
     pk_t, h_t = onset_peaks(y16[i0 * HOP:i1 * HOP])
+    if pk_extra is not None:
+        allpk = np.r_[pk_t, pk_extra[0]]
+        allh = np.r_[h_t, pk_extra[1]]
+        order = np.argsort(allpk)
+        pk_t, h_t = allpk[order].astype(int), allh[order]
     ref_h = np.percentile(h_t, 90) if len(h_t) else 1.0
     steps = pitch_steps(sm, TV)
     TA = np.maximum(impulse_train(pk_t, np.clip(h_t / ref_h, 0.3, 1.0), n),
@@ -678,6 +746,9 @@ def main():
                     if 0 <= k_ + d_ - f_ < n:
                         cand_s.add(k_ + d_ - f_)
         starts = sorted(s_ for s_ in cand_s if near[s_])
+    else:
+        key = np.convolve((TA > 0.5).astype(float), np.ones(9), mode="same") > 0
+        starts = [int(s) for s in range(0, n) if near[s] and (s % args.stride == 0 or key[s])]
     if args.choke:
         lmax_ = max(len(t["st"]) for t in toks)
         ko = []
@@ -688,9 +759,6 @@ def main():
         args._key_offsets = torch.zeros((len(starts), km_), dtype=torch.long)
         for i_, r in enumerate(ko):
             args._key_offsets[i_, :len(r)] = torch.from_numpy(r.astype(np.int64))
-    else:
-        key = np.convolve((TA > 0.5).astype(float), np.ones(9), mode="same") > 0
-        starts = [int(s) for s in range(0, n) if near[s] and (s % args.stride == 0 or key[s])]
     print(f"{len(toks)} tokens ({sum(t['shift'] != 0 for t in toks)} speed-shifted, "
           f"{sum(t['char'] != args.singer for t in toks)} other-character); {len(pk_t)} onsets + {len(steps)} note "
           f"changes as key frames; {len(starts)} start times", flush=True)

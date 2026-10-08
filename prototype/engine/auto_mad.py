@@ -142,10 +142,99 @@ def tune(args):
     print(f"[tune] report -> out/v9_{args.name}_tune.json")
 
 
+def accomp(args):
+    """v10: 每首歌出两个带伴奏拟合的版本。
+    A joint：单条 token 流，主旋律间隙自动接鬼畜贝斯（一个人哼全曲），drums+other 打底。
+    B sep  ：主旋律（复用 v9 胜者渲染）+ 贝斯声部独立 DP（+2 八度哼唱），双流合成 + drums+other 打底。
+    """
+    import librosa
+    import numpy as np
+    import soundfile as sf
+    sys.path.insert(0, str(HERE))
+    import sing_melody as SG
+
+    rep = json.load(open(OUT / f"v9_{args.name}_tune.json"))
+    win = rep["winner"]
+    vs = variants(args)
+    base_v = sorted((v for v, _, _ in vs if win["variant"].startswith(v)), key=len)[-1]
+    shifts, low = next((s, l) for v, s, l in vs if v == base_v)
+    lam = win["lambda_N"]
+    mix, stems = song_paths(args.name)
+    common = [sys.executable, str(ENGINE), "--mix", str(mix), "--stems", str(stems),
+              "--version", "v10", "--ref-name", f"v9_{args.name}", "--singer", args.singer,
+              "--choke", "--w-onset", "2",
+              "--start", str(args.start)]
+    if low:
+        common += ["--low-chars", low]
+    if args.dur_limit:
+        common += ["--dur-limit", str(args.dur_limit)]
+
+    # A: joint 连带拟合（沿用 v9 胜者搜索配置，drums+other 打底）
+    cmd_a = common + ["--out", str(OUT / f"v10_{args.name}_joint"), "--variant", "joint",
+                      "--target-mode", "joint", "--backing", "nobass", "--keyframe-hard",
+                      f"--c-skip={win['c_skip']:g}", f"--w-keyalign={W_KEYALIGN:g}",
+                      f"--w-pitch={win['w_pitch']:g}", f"--topk={TOPK}",
+                      "--lambdas", f"{lam:g}", "--render", f"{lam:g}", f"--shifts={shifts}"]
+    print("[accomp] A joint:\n  $ " + " ".join(cmd_a), flush=True)
+    r = subprocess.run(cmd_a, capture_output=True, text=True)
+    if r.returncode != 0:
+        print(r.stdout[-3000:]); print(r.stderr[-3000:]); sys.exit("joint run failed")
+
+    # B: 贝斯声部独立拟合（不卡点硬约束、w_keyalign=0、wp=1、λ=5 稀疏）
+    blat = 5.0
+    cmd_b = common + ["--out", str(OUT / f"v10_{args.name}_sep_bass"), "--variant", "sep_bass",
+                      "--target-mode", "bass", "--backing", "none",
+                      "--c-skip=2", "--w-pitch=1", f"--topk={TOPK}",
+                      "--lambdas", f"{blat:g}", "--render", f"{blat:g}", f"--shifts={shifts}"]
+    print("[accomp] B bass:\n  $ " + " ".join(cmd_b), flush=True)
+    r = subprocess.run(cmd_b, capture_output=True, text=True)
+    if r.returncode != 0:
+        print(r.stdout[-3000:]); print(r.stderr[-3000:]); sys.exit("bass run failed")
+
+    # B 合成：v9 主旋律干声 + 鬼畜贝斯(-4dB) + drums+other(-6dB)
+    mel_p = OUT / f"v9_{args.name}_{win['variant']}_L{lam:g}_vocal_dry.wav"
+    bas_p = OUT / f"v10_{args.name}_sep_bass_L{blat:g}_vocal_dry.wav"
+    mel, sr = librosa.load(mel_p, sr=44100)
+    bas, _ = librosa.load(bas_p, sr=44100)
+    n_ = min(len(mel), len(bas))
+    mel, bas = mel[:n_], bas[:n_]
+    inst = None
+    for stem in ("drums", "other"):
+        x, sri = sf.read(stems / f"{stem}.wav", start=int(args.start * 44100),
+                         stop=int((args.start + n_ / 44100 + 3) * 44100),
+                         always_2d=True, dtype="float32")
+        x_ = x.mean(axis=1)
+        x_ = librosa.resample(x_, orig_sr=sri, target_sr=44100) if sri != 44100 else x_
+        inst = x_ if inst is None else inst[:len(x_)] + x_[:len(inst)]
+    inst = np.pad(inst, (0, max(0, n_ - len(inst))))[:n_]
+    va = np.abs(mel) > 1e-4
+    inst *= np.sqrt(np.mean(mel[va] ** 2)) * 10 ** (-6 / 20) / (np.sqrt(np.mean(inst ** 2)) + 1e-9)
+    dry = mel + bas * 0.63
+    dry *= 0.95 / max(np.max(np.abs(dry)), 1e-9)
+    full = dry + inst
+    full *= 0.95 / max(np.max(np.abs(full)), 1e-9)
+    for suf, sig in (("_sep_dry", dry), ("_sep", full)):
+        p = OUT / f"v10_{args.name}{suf}.wav"
+        sf.write(p, sig.astype("float32"), 44100)
+        SG.mp3(p)
+    bm = json.load(open(OUT / f"v10_{args.name}_sep_bass_L{blat:g}.metrics.json"))
+    mm = json.load(open(OUT / f"v9_{args.name}_{win['variant']}_L{lam:g}.metrics.json"))
+    json.dump({"version": "v10", "song": mm["song"], "singer": mm["singer"], "variant": "sep",
+               "melody_config": mm["variant"], "melody_lambda": lam,
+               "melody": {k: mm[k] for k in ("M1_pitch_acc50", "M1_pitch_acc100", "M2_voicing_recall",
+                                             "M3_onset_within_30ms", "n_tokens", "distinct_lines")},
+               "bass": {k: bm[k] for k in ("M1_pitch_acc50", "M1_pitch_acc100", "M2_voicing_recall",
+                                           "M2_voicing_false_alarm", "n_tokens", "distinct_lines",
+                                           "token_dur_median")},
+               "bass_accomp_octave": 2},
+              open(OUT / f"v10_{args.name}_sep.metrics.json", "w"), ensure_ascii=False, indent=1)
+    print(f"[accomp] done: v10_{args.name}_joint_* / v10_{args.name}_sep*", flush=True)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for name in ("prepare", "tune", "render"):
+    for name in ("prepare", "tune", "render", "accomp"):
         p = sub.add_parser(name)
         p.add_argument("--name", required=True, help="歌曲名（materials/<name>_original.wav）")
         if name == "prepare":
@@ -154,9 +243,10 @@ def main():
             p.add_argument("--singer", default="长崎爽世")
             p.add_argument("--start", type=float, default=0.0)
             p.add_argument("--dur-limit", type=float, default=None)
-            p.add_argument("--song-speed", type=float, default=1.0,
-                           help="同时放慢歌曲与音效的等价系数：λ_N、c_skip 除以它")
-            p.add_argument("--len-scale", action="store_true", help="允许音效长度缩放变体（默认关）")
+            if name != "accomp":
+                p.add_argument("--song-speed", type=float, default=1.0,
+                               help="同时放慢歌曲与音效的等价系数：λ_N、c_skip 除以它")
+                p.add_argument("--len-scale", action="store_true", help="允许音效长度缩放变体（默认关）")
         if name == "render":
             p.add_argument("--variant", default="down+low")
             p.add_argument("--lambda", dest="lam", type=float, default=10.0)
@@ -165,6 +255,10 @@ def main():
         prepare(args)
     elif args.cmd == "tune":
         tune(args)
+    elif args.cmd == "accomp":
+        args.song_speed = 1.0
+        args.len_scale = False
+        accomp(args)
     elif args.cmd == "render":
         vtag = args.variant
         shifts, low = next((s, l) for v, s, l in variants(args) if v == vtag)
