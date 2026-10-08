@@ -46,5 +46,9 @@ python3 prototype/make_review.py             # rebuild review.html after renders
 - Metrics that matter (see `*.metrics.json`): M1 pitch accuracy ±50 cents,
   M2 voicing recall/false-alarm, M3 onset timing (±30 ms share, late share),
   M5 dynamics correlation, distinct_lines (diversity), crop_mean.
+- Current default search config (found by probing on haruhikage): w_keyalign=3
+  (internal-attack alignment cost), topk=128, w_pitch/c_skip swept as pairs
+  (2/3, 2.5/4, 3/5) x lambda_N (2.5, 5). Raising w_pitch without raising
+  c_skip tanks voicing recall; they move together.
 - After editing engine code, run a short-window render and check metrics
   before claiming success; the author judges final quality by ear.
