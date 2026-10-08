@@ -1,0 +1,62 @@
+{
+ "version": "v10",
+ "song": "sonochi_original",
+ "singer": "长崎爽世",
+ "lambda_N": 5.0,
+ "w_vowel": 0.0,
+ "w_onset": 2.0,
+ "w_keyalign": 0.0,
+ "shifts": "-4,-3,-2,-1,0",
+ "w_pitch": 1.0,
+ "c_skip": 2.0,
+ "topk": 128,
+ "low_chars": "椎名立希,八幡海铃,若叶睦",
+ "variant": "sep_bass",
+ "n_shifted": 261,
+ "n_choked": 332,
+ "keyframe_hard": false,
+ "choke": true,
+ "n_other_char": 26,
+ "rho": 0.7,
+ "window": [
+  0.0,
+  262.6
+ ],
+ "n_tokens": 455,
+ "token_dur_median": 0.38,
+ "distinct_lines": 127,
+ "crop_mean": 0.128,
+ "gain_db_median_abs": 1.9,
+ "processing": "none (constant gain + 5 ms fades)",
+ "M3_onsets_hit_150ms": 0.694,
+ "M3_onset_lag_median_ms": 10.0,
+ "M3_onset_within_30ms": 0.273,
+ "M3_onset_late_gt30ms": 0.371,
+ "M3_onset_early_gt30ms": 0.236,
+ "pitch_bands": {
+  "band_0_61": {
+   "share": 0.475,
+   "covered": 0.884,
+   "acc50": 0.633
+  },
+  "band_61_68": {
+   "share": 0.442,
+   "covered": 0.918,
+   "acc50": 0.728
+  },
+  "band_68_99": {
+   "share": 0.084,
+   "covered": 0.789,
+   "acc50": 0.638
+  }
+ },
+ "M1_pitch_acc50": 0.676,
+ "M1_pitch_acc100": 0.918,
+ "M1_pitch_cents_median": 31.8,
+ "M2_voicing_recall": 0.891,
+ "M2_voicing_false_alarm": 0.265,
+ "M3_onset_f1_50ms": 0.456,
+ "M5_dynamics_corr": 0.468,
+ "inst_db": -6.0,
+ "ref_name": "v9_sonochi"
+}

@@ -47,6 +47,25 @@ audio{width:100%;height:34px}.note{color:#555;font-size:.9rem}code{background:#f
 </style></head><body>"""
 
 
+def v11_section():
+    rows = [(mf.name[:-len(".metrics.json")], json.load(open(mf))) for mf in sorted(OUT.glob("v11_*.metrics.json"))]
+    if not rows:
+        return ""
+    h = ["""<h2>v11 · 码本 scaling 检验（A100 集群）：原神丽莎 vs 素世</h2>
+<p class="note">同一首歌、同一搜索配置，只换码本。丽莎 533 句（原神单角色最多）：高音区（&gt;68，占 31%）覆盖 4%、±50 音分 50%、该唱在唱 42%；素世 2381 句：对应 78% / 65% / 82%。<b>结论：码本与歌的匹配度（音域覆盖 + 语气多样性）远大于码本规模</b>——素世的量级已饱和，更大但不合身的码本显著更差。原神全量语音包（95G 原始包）无下载必要。</p>"""]
+    for name, m in rows:
+        b68 = m.get("pitch_bands", {}).get("band_68_99", {})
+        b0 = m.get("pitch_bands", {}).get("band_0_61", {})
+        mt = (f"码本 {m['singer']}，{m['n_tokens']} 个音效 / {m['distinct_lines']} 句<br>"
+              f"±50 音分 {round(m['M1_pitch_acc50']*100)}%，±100 {round(m['M1_pitch_acc100']*100)}%，该唱在唱 {round(m['M2_voicing_recall']*100)}%，卡点 ±30 ms {round(m['M3_onset_within_30ms']*100)}%<br>"
+              f"高音区（&gt;68）覆盖 {round(b68.get('covered', 0)*100)}%，低音区（&lt;61）覆盖 {round(b0.get('covered', 0)*100)}%")
+        frag = f"out/{name}_fragments/index.html"
+        h.append(f"<table><tr><th>渲染</th><th>指标</th><th>试听</th></tr>"
+                 f"<tr><td><code>{name}</code></td><td>{mt}</td><td><b>鬼畜干声</b><br>{audio(name + '_vocal_dry.mp3')}<br><b>混音</b><br>{audio(name + '.mp3')}"
+                 + (f'<br><a href="{frag}">逐音效碎片</a>' if Path(frag).exists() else "") + "</td></tr></table>")
+    return "\n".join(h)
+
+
 def v10_section():
     seps = {p.name[:-len(".metrics.json")]: json.load(open(p)) for p in OUT.glob("v10_*_sep.metrics.json")}
     joints = {}
@@ -315,7 +334,7 @@ def v1_section():
 
 
 def main():
-    h = [HEAD, "<h1>鬼畜调音 · 验收</h1>", v10_section(), v9_section(), v8_section(), v7_section(), v5_section(), v4_section(), v3_section(), v2_section(), v1_section(),
+    h = [HEAD, "<h1>鬼畜调音 · 验收</h1>", v11_section(), v10_section(), v9_section(), v8_section(), v7_section(), v5_section(), v4_section(), v3_section(), v2_section(), v1_section(),
          '<p class="note">旧结果：<code>legacy/out/</code>；旧引擎：<code>legacy/engine/</code>。</p></body></html>']
     (ROOT / "review.html").write_text("\n".join(x for x in h if x))
     n2 = len(list(OUT.glob("v2_*.metrics.json"))) + len(list(OUT.glob("v3_*.metrics.json")))

@@ -1,0 +1,62 @@
+{
+ "version": "v10",
+ "song": "haruhikage_original",
+ "singer": "长崎爽世",
+ "lambda_N": 5.0,
+ "w_vowel": 0.0,
+ "w_onset": 2.0,
+ "w_keyalign": 0.0,
+ "shifts": "-4,-3,-2,-1,0",
+ "w_pitch": 1.0,
+ "c_skip": 2.0,
+ "topk": 128,
+ "low_chars": "椎名立希,八幡海铃,若叶睦",
+ "variant": "sep_bass",
+ "n_shifted": 139,
+ "n_choked": 308,
+ "keyframe_hard": false,
+ "choke": true,
+ "n_other_char": 29,
+ "rho": 0.7,
+ "window": [
+  0.0,
+  259.0
+ ],
+ "n_tokens": 425,
+ "token_dur_median": 0.38,
+ "distinct_lines": 112,
+ "crop_mean": 0.185,
+ "gain_db_median_abs": 2.0,
+ "processing": "none (constant gain + 5 ms fades)",
+ "M3_onsets_hit_150ms": 0.784,
+ "M3_onset_lag_median_ms": 20.0,
+ "M3_onset_within_30ms": 0.339,
+ "M3_onset_late_gt30ms": 0.421,
+ "M3_onset_early_gt30ms": 0.146,
+ "pitch_bands": {
+  "band_0_61": {
+   "share": 0.327,
+   "covered": 0.915,
+   "acc50": 0.665
+  },
+  "band_61_68": {
+   "share": 0.538,
+   "covered": 0.888,
+   "acc50": 0.651
+  },
+  "band_68_99": {
+   "share": 0.135,
+   "covered": 0.868,
+   "acc50": 0.613
+  }
+ },
+ "M1_pitch_acc50": 0.651,
+ "M1_pitch_acc100": 0.887,
+ "M1_pitch_cents_median": 32.2,
+ "M2_voicing_recall": 0.894,
+ "M2_voicing_false_alarm": 0.212,
+ "M3_onset_f1_50ms": 0.424,
+ "M5_dynamics_corr": 0.422,
+ "inst_db": -6.0,
+ "ref_name": "v9_haruhikage"
+}

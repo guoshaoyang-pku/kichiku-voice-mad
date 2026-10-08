@@ -1,0 +1,26 @@
+{
+ "version": "v10",
+ "song": "sonochi_original",
+ "singer": "长崎爽世",
+ "variant": "sep",
+ "melody_config": "down+low+wp3cs5",
+ "melody_lambda": 2.5,
+ "melody": {
+  "M1_pitch_acc50": 0.659,
+  "M1_pitch_acc100": 0.885,
+  "M2_voicing_recall": 0.808,
+  "M3_onset_within_30ms": 0.456,
+  "n_tokens": 535,
+  "distinct_lines": 183
+ },
+ "bass": {
+  "M1_pitch_acc50": 0.676,
+  "M1_pitch_acc100": 0.918,
+  "M2_voicing_recall": 0.891,
+  "M2_voicing_false_alarm": 0.265,
+  "n_tokens": 455,
+  "distinct_lines": 127,
+  "token_dur_median": 0.38
+ },
+ "bass_accomp_octave": 2
+}

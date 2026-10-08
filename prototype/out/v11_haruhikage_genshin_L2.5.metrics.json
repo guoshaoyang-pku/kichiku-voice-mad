@@ -1,0 +1,62 @@
+{
+ "version": "v11",
+ "song": "haruhikage_original",
+ "singer": "丽莎",
+ "lambda_N": 2.5,
+ "w_vowel": 0.0,
+ "w_onset": 2.0,
+ "w_keyalign": 3.0,
+ "shifts": "-4,-3,-2,-1,0",
+ "w_pitch": 2.5,
+ "c_skip": 4.0,
+ "topk": 128,
+ "low_chars": "",
+ "variant": "genshin_lisa",
+ "n_shifted": 79,
+ "n_choked": 155,
+ "keyframe_hard": true,
+ "choke": true,
+ "n_other_char": 0,
+ "rho": 0.7,
+ "window": [
+  0.0,
+  259.0
+ ],
+ "n_tokens": 173,
+ "token_dur_median": 0.56,
+ "distinct_lines": 44,
+ "crop_mean": 0.14,
+ "gain_db_median_abs": 2.0,
+ "processing": "none (constant gain + 5 ms fades)",
+ "M3_onsets_hit_150ms": 0.482,
+ "M3_onset_lag_median_ms": 0.0,
+ "M3_onset_within_30ms": 0.23,
+ "M3_onset_late_gt30ms": 0.233,
+ "M3_onset_early_gt30ms": 0.29,
+ "pitch_bands": {
+  "band_0_61": {
+   "share": 0.181,
+   "covered": 0.661,
+   "acc50": 0.485
+  },
+  "band_61_68": {
+   "share": 0.511,
+   "covered": 0.555,
+   "acc50": 0.519
+  },
+  "band_68_99": {
+   "share": 0.308,
+   "covered": 0.044,
+   "acc50": 0.242
+  }
+ },
+ "M1_pitch_acc50": 0.5,
+ "M1_pitch_acc100": 0.762,
+ "M1_pitch_cents_median": 50.0,
+ "M2_voicing_recall": 0.417,
+ "M2_voicing_false_alarm": 0.076,
+ "M3_onset_f1_50ms": 0.389,
+ "M5_dynamics_corr": -0.038,
+ "inst_db": -6.0,
+ "ref_name": "v9_haruhikage"
+}

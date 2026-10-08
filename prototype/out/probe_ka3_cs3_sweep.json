@@ -1,0 +1,14 @@
+[
+ {
+  "N": 334,
+  "dur_median": 0.43,
+  "pitch_acc50": 0.518,
+  "pitch_acc100": 0.78,
+  "voicing_recall": 0.763,
+  "false_alarm": 0.104,
+  "keyframe_hit_30ms": 0.621,
+  "lambda_N": 5.0,
+  "distinct_lines": 148,
+  "crop_mean": 0.153
+ }
+]

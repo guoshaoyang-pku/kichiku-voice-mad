@@ -1,0 +1,26 @@
+{
+ "version": "v10",
+ "song": "roundabout_original",
+ "singer": "长崎爽世",
+ "variant": "sep",
+ "melody_config": "down+low+wp3cs5",
+ "melody_lambda": 2.5,
+ "melody": {
+  "M1_pitch_acc50": 0.631,
+  "M1_pitch_acc100": 0.866,
+  "M2_voicing_recall": 0.715,
+  "M3_onset_within_30ms": 0.534,
+  "n_tokens": 418,
+  "distinct_lines": 171
+ },
+ "bass": {
+  "M1_pitch_acc50": 0.66,
+  "M1_pitch_acc100": 0.894,
+  "M2_voicing_recall": 0.839,
+  "M2_voicing_false_alarm": 0.147,
+  "n_tokens": 554,
+  "distinct_lines": 100,
+  "token_dur_median": 0.45
+ },
+ "bass_accomp_octave": 2
+}
