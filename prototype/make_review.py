@@ -39,12 +39,22 @@ HEAD = """<!doctype html><html lang="zh"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>鬼畜调音 · 验收</title>
 <style>
-body{font-family:-apple-system,"PingFang SC",sans-serif;max-width:920px;margin:2rem auto;padding:0 1rem;color:#222;line-height:1.6}
+body{font-family:-apple-system,"PingFang SC",sans-serif;max-width:1280px;margin:2rem auto;padding:0 1rem;color:#222;line-height:1.6}
 h1{font-size:1.45rem}h2{font-size:1.1rem;margin-top:2rem;border-bottom:1px solid #ddd;padding-bottom:.3rem}
 table{border-collapse:collapse;width:100%;font-size:.84rem;margin:.5rem 0}
 th,td{border:1px solid #ddd;padding:.3rem .5rem;text-align:left;vertical-align:top}th{background:#f6f6f6}
-audio{width:100%;height:34px}.note{color:#555;font-size:.9rem}code{background:#f4f4f4;padding:.05rem .3rem;border-radius:3px}
-</style></head><body>"""
+audio{width:560px;max-width:100%;height:34px;display:block}.note{color:#555;font-size:.9rem}code{background:#f4f4f4;padding:.05rem .3rem;border-radius:3px}
+#aw{position:sticky;top:0;background:#fff;padding:.35rem 0;z-index:9;border-bottom:1px solid #eee;font-size:.85rem;color:#555}
+#aw input{vertical-align:middle;width:200px}
+</style></head><body>
+<div id="aw">播放器宽度 <input type="range" id="awrange" min="300" max="1100" step="20" value="560"> <span id="awval">560px</span></div>
+<script>
+const r=document.getElementById('awrange'),v=document.getElementById('awval');
+function setw(px){document.querySelectorAll('audio').forEach(a=>a.style.width=px+'px');v.textContent=px+'px';
+try{localStorage.setItem('aw',px)}catch(e){}}
+r.addEventListener('input',e=>setw(e.target.value));
+try{const s=localStorage.getItem('aw');if(s){r.value=s;setw(s)}}catch(e){}
+</script>"""
 
 
 def v11_section():
